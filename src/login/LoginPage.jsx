@@ -214,7 +214,7 @@ const LoginPage = () => {
           color="secondary"
           disabled={!email || !password || (codeEnabled && !code)}
         >
-          {t('loginLogin')} - Custom Test
+          {t('loginLogin')}
         </Button>
         {openIdEnabled && (
           <Button
