@@ -60,6 +60,18 @@ import { useLocalization } from './common/components/LocalizationProvider';
 import fetchOrThrow from './common/util/fetchOrThrow';
 import AuditPage from './reports/AuditPage';
 
+import MainPageNew from './ui/MainPageNew';
+import LoginDemo from './ui/LoginDemo';
+import DashboardPage from './ui/DashboardPage';
+import ReplayPageNew from './ui/ReplayPageNew';
+import SettingsPage from './ui/SettingsPage';
+import MaintenancePageNew from './ui/MaintenancePageNew';
+import ReportPageNew from './ui/reports/ReportPageNew';
+import GraphPage from './ui/GraphPage';
+import UsersPageNew from './ui/UsersPage';
+
+
+
 const Navigation = () => {
   const dispatch = useDispatch();
   const { setLocalLanguage } = useLocalization();
@@ -112,6 +124,8 @@ const Navigation = () => {
   }
   return (
     <Routes>
+      <Route path="/login-new" element={<LoginDemo />} />
+
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -125,6 +139,18 @@ const Navigation = () => {
         <Route path="replay" element={<ReplayPage />} />
         <Route path="geofences" element={<GeofencesPage />} />
         <Route path="emulator" element={<EmulatorPage />} />
+
+        <Route path="/map" element={<MainPageNew />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/settings-page" element={<SettingsPage />} />
+        <Route path="/maintenances-page" element={<MaintenancePageNew />} />
+        <Route path="/reports-page" element={<ReportPageNew />} />
+        <Route path="/graph-page" element={<GraphPage />} />
+        <Route path="replay-new" element={<ReplayPageNew />} />
+        <Route path="/users-new" element={<UsersPageNew />} />
+
+
+
 
         <Route path="settings">
           <Route path="accumulators/:deviceId" element={<AccumulatorsPage />} />
