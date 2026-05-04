@@ -1,361 +1,915 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Box,
-  Paper,
   Typography,
   IconButton,
-  Slider,
   Select,
   MenuItem,
+  Slider,
+  Stack,
   Divider,
+  CircularProgress,
+  TextField,
+  Chip,
 } from '@mui/material';
+import { makeStyles } from 'tss-react/mui';
 import {
   PlayArrow,
   Pause,
-  SkipNext,
-  SkipPrevious,
-  InfoOutlined,
-  Fullscreen,
-  ChevronLeft,
+  FastRewind,
+  FastForward,
+  FirstPage,
+  LastPage,
+  FileDownload,
+  Close,
   CalendarToday,
-  Route,
+  DirectionsCar,
   LocalParking,
-  LocalGasStation,
-  HighlightOff,
-  LocationOn,
+  KeyboardArrowDown,
+  Refresh,
+  Route,
 } from '@mui/icons-material';
-import { makeStyles } from 'tss-react/mui';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import dayjs from 'dayjs';
 import MapView from '../map/core/MapView';
-import MapPositions from '../map/MapPositions';
 import MapRoutePath from '../map/MapRoutePath';
-import PageLayout from './PageLayout';
+import MapRoutePoints from '../map/MapRoutePoints';
+import MapPositions from '../map/MapPositions';
+import MapCamera from '../map/MapCamera';
+import MapGeofence from '../map/MapGeofence';
+import StatusCard from '../common/components/StatusCard';
+import MapScale from '../map/MapScale';
+import MapOverlay from '../map/overlay/MapOverlay';
 import { formatTime } from '../common/util/formatter';
-import { speedFromKnots } from '../common/util/converter';
-import { useAttributePreference } from '../common/util/preferences';
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-    backgroundColor: '#f5f5f7',
-    position: 'relative',
-  },
-  sidebar: {
-    width: 400,
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    zIndex: 10,
-    boxShadow: '2px 0 10px rgba(0,0,0,0.05)',
-    backgroundColor: '#fff',
-  },
-  mapContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  panelHeader: {
-    padding: theme.spacing(1, 2),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dateFilter: {
-    margin: theme.spacing(1, 2),
-    padding: theme.spacing(1),
-    border: '1px solid #ddd',
-    borderRadius: 8,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontSize: '0.9rem',
-  },
-  miniMapPreview: {
-    height: 200,
-    margin: theme.spacing(0, 2),
-    borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-    border: '1px solid #eee',
-  },
-  playbackControlsSidebar: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1),
-  },
-  controlRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  speedDisplaySidebar: {
-    backgroundColor: '#1a237e',
-    color: '#fff',
-    padding: '8px 16px',
-    borderRadius: 6,
-    textAlign: 'center',
-    minWidth: 80,
-  },
-  activityHeader: {
-    padding: theme.spacing(2),
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-  },
-  statsGrid: {
-    padding: theme.spacing(0, 2, 2),
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 8,
-  },
-  movementCard: {
-    margin: theme.spacing(1, 2),
-    padding: theme.spacing(2),
-    borderRadius: 12,
-    border: '1px solid #e8f5e9',
-    backgroundColor: '#f9fff9',
-  },
-  // Floating Bottom Bar - Screenshot 2026-05-04 at 03.41.46_2.jpg
-  floatingPlaybackBar: {
-    position: 'absolute',
-    bottom: 24,
-    left: 424,
-    right: 24,
-    height: 64,
-    backgroundColor: 'rgba(33, 33, 33, 0.85)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: 12,
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 20px',
-    zIndex: 100,
-    color: '#fff',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-  },
-  speedBadgeFloating: {
-    marginLeft: 'auto',
-    padding: '6px 16px',
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 152, 0, 0.12)',
-    border: '1px solid rgba(255, 152, 0, 0.4)',
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: 4,
-    color: '#ff9800',
-  },
-  playBtnDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 8,
-    margin: '0 10px',
-    color: '#fff',
-    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)' },
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const fmtDuration = (ms) => {
+  if (!ms || ms <= 0) return '0m';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+const fmtDist = (m) => {
+  if (!m) return '0 km';
+  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`;
+};
+
+const PERIOD_PRESETS = [
+  { label: 'Auj.', value: 'today' },
+  { label: 'Hier', value: 'yesterday' },
+  { label: '7j', value: '7d' },
+  { label: '30j', value: '30d' },
+];
+
+const getPeriodRange = (period) => {
+  const now = dayjs();
+  switch (period) {
+    case 'today':
+      return [now.startOf('day'), now];
+    case 'yesterday':
+      return [now.subtract(1, 'day').startOf('day'), now.subtract(1, 'day').endOf('day')];
+    case '7d':
+      return [now.subtract(7, 'day').startOf('day'), now];
+    case '30d':
+      return [now.subtract(30, 'day').startOf('day'), now];
+    default:
+      return null;
   }
+};
+
+const DARK_MENU = {
+  PaperProps: {
+    sx: {
+      background: '#0f172a',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '12px',
+      mt: 0.5,
+      '& .MuiMenuItem-root': { color: '#cbd5e1', fontSize: '0.86rem', py: 0.9 },
+      '& .MuiMenuItem-root:hover': { background: 'rgba(255,255,255,0.06)' },
+      '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
+    },
+  },
+};
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const useStyles = makeStyles()(() => ({
+  root: { height: '100%', position: 'relative', overflow: 'hidden', background: '#080d1a' },
+
+  sidebar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 380,
+    background: 'rgba(8,13,26,0.97)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRight: '1px solid rgba(255,255,255,0.08)',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
+  },
+
+  sidebarHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '14px 18px',
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
+    flexShrink: 0,
+  },
+
+  scrollArea: {
+    flex: 1,
+    overflowY: 'auto',
+    scrollbarWidth: 'thin',
+    scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+    '&::-webkit-scrollbar': { width: 4 },
+    '&::-webkit-scrollbar-track': { background: 'transparent' },
+    '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: 4 },
+  },
+
+  glassSelect: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '10px',
+    color: '#e2e8f0',
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
+    '& .MuiSelect-select': { fontWeight: 600, fontSize: '0.84rem' },
+    '& .MuiSvgIcon-root': { color: '#475569' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+  },
+
+  dateInput: {
+    '& .MuiOutlinedInput-root': {
+      background: 'rgba(255,255,255,0.05)',
+      borderRadius: '10px',
+      color: '#e2e8f0',
+      fontSize: '0.82rem',
+      '& fieldset': { border: '1px solid rgba(255,255,255,0.1)' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+    },
+    '& input': { color: '#e2e8f0', fontSize: '0.82rem' },
+    '& input::-webkit-calendar-picker-indicator': { filter: 'invert(0.55)', cursor: 'pointer' },
+  },
+
+  slider: {
+    color: '#6366f1',
+    '& .MuiSlider-thumb': {
+      width: 14,
+      height: 14,
+      boxShadow: '0 0 0 4px rgba(99,102,241,0.2)',
+    },
+    '& .MuiSlider-track': { height: 4 },
+    '& .MuiSlider-rail': { height: 4, opacity: 0.2 },
+  },
+
+  ctrlBtn: {
+    color: '#94a3b8',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '10px !important',
+    width: 36,
+    height: 36,
+    '&:hover': { background: 'rgba(255,255,255,0.06)', color: '#e2e8f0' },
+    '&.Mui-disabled': { opacity: 0.3 },
+  },
+
+  playBtn: {
+    background: '#6366f1',
+    color: '#fff',
+    borderRadius: '50%',
+    width: 44,
+    height: 44,
+    '&:hover': { background: '#4f46e5' },
+    '&.Mui-disabled': { background: 'rgba(99,102,241,0.25)', color: 'rgba(255,255,255,0.3)' },
+  },
+
+  activityItem: {
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'rgba(255,255,255,0.03)',
+    padding: '12px 14px',
+    marginBottom: '8px',
+    transition: 'border-color 0.15s',
+    '&:hover': { borderColor: 'rgba(255,255,255,0.12)' },
+    cursor: 'default',
+  },
 }));
+
+// ─── ReplayPageNew ────────────────────────────────────────────────────────────
 
 const ReplayPageNew = () => {
   const { classes } = useStyles();
-  const speedUnit = useAttributePreference('speedUnit', 'kn');
-  const [positions, setPositions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [speedMultiplier, setSpeedMultiplier] = useState(1);
+  const navigate = useNavigate();
   const timerRef = useRef();
+  const [searchParams] = useSearchParams();
 
-  const currentPosition = positions[currentIndex];
+  // Redux
+  const reduxDefaultId = useSelector((state) => state.devices.selectedId);
+  const reduxDevices = useSelector((state) => Object.values(state.devices.items));
 
+  // URL param takes priority over redux selected device
+  const urlDeviceId = searchParams.get('deviceId');
+  const initialDeviceId = urlDeviceId || reduxDefaultId || '';
+
+  // Filter state
+  const [filterDeviceId, setFilterDeviceId] = useState(initialDeviceId);
+  const [filterFrom, setFilterFrom] = useState(dayjs().startOf('day').format('YYYY-MM-DDTHH:mm'));
+  const [filterTo, setFilterTo] = useState(dayjs().format('YYYY-MM-DDTHH:mm'));
+  const [activePeriod, setActivePeriod] = useState('today');
+
+  // Data state
+  const [positions, setPositions] = useState([]);
+  const [trips, setTrips] = useState([]);
+  const [stops, setStops] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+
+  // Playback state
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  // UI state
+  const [activityFilter, setActivityFilter] = useState('all');
+  const [showCard, setShowCard] = useState(false);
+
+  const loaded = !loading && positions.length > 0;
+
+  // Sync if redux devices load after first render and no URL param was given
+  useEffect(() => {
+    if (!urlDeviceId && reduxDefaultId && !filterDeviceId) {
+      setFilterDeviceId(reduxDefaultId);
+    }
+  }, [reduxDefaultId]);
+
+  // Sync period presets to date inputs
+  const applyPeriod = (period) => {
+    setActivePeriod(period);
+    const range = getPeriodRange(period);
+    if (range) {
+      setFilterFrom(range[0].format('YYYY-MM-DDTHH:mm'));
+      setFilterTo(range[1].format('YYYY-MM-DDTHH:mm'));
+    }
+  };
+
+  // Playback interval
   useEffect(() => {
     if (playing && positions.length > 0) {
+      const ms = Math.max(50, Math.round(500 / playbackSpeed));
       timerRef.current = setInterval(() => {
-        setCurrentIndex((prev) => (prev < positions.length - 1 ? prev + 1 : prev));
-      }, 500 / speedMultiplier);
+        setIndex((i) => {
+          if (i >= positions.length - 1) {
+            clearInterval(timerRef.current);
+            setPlaying(false);
+            return i;
+          }
+          return i + 1;
+        });
+      }, ms);
     } else {
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [playing, speedMultiplier, positions.length]);
+  }, [playing, positions, playbackSpeed]);
+
+  // Load handler
+  const handleLoad = async () => {
+    if (!filterDeviceId) return;
+    setLoading(true);
+    setPlaying(false);
+    setIndex(0);
+    const from = new Date(filterFrom).toISOString();
+    const to = new Date(filterTo).toISOString();
+    const q = new URLSearchParams({ deviceId: filterDeviceId, from, to });
+    try {
+      const [posRes, tripsRes, stopsRes] = await Promise.all([
+        fetch(`/api/positions?${q}`),
+        fetch(`/api/reports/trips?${q}`, { headers: { Accept: 'application/json' } }),
+        fetch(`/api/reports/stops?${q}`, { headers: { Accept: 'application/json' } }),
+      ]);
+      const [posData, tripsData, stopsData] = await Promise.all([
+        posRes.json(),
+        tripsRes.json(),
+        stopsRes.json(),
+      ]);
+      setPositions(Array.isArray(posData) ? posData : []);
+      setTrips(Array.isArray(tripsData) ? tripsData : []);
+      setStops(Array.isArray(stopsData) ? stopsData : []);
+      setSelectedDeviceId(filterDeviceId);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setPlaying(false);
+    setPositions([]);
+    setTrips([]);
+    setStops([]);
+    setIndex(0);
+  };
+
+  const handleDownload = () => {
+    if (!selectedDeviceId) return;
+    const from = new Date(filterFrom).toISOString();
+    const to = new Date(filterTo).toISOString();
+    const q = new URLSearchParams({ deviceId: selectedDeviceId, from, to });
+    window.location.assign(`/api/positions/kml?${q}`);
+  };
+
+  const onPointClick = useCallback((_, i) => setIndex(i), []);
+  const onMarkerClick = useCallback((id) => setShowCard(!!id), []);
+
+  // Activity list
+  const activityItems = useMemo(() => {
+    const t = trips.map((r) => ({ ...r, type: 'trip' }));
+    const s = stops.map((r) => ({ ...r, type: 'stop' }));
+    return [...t, ...s].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+  }, [trips, stops]);
+
+  const filteredActivity = useMemo(() => {
+    if (activityFilter === 'trip') return activityItems.filter((i) => i.type === 'trip');
+    if (activityFilter === 'stop') return activityItems.filter((i) => i.type === 'stop');
+    return activityItems;
+  }, [activityItems, activityFilter]);
+
+  // Summary stats
+  const stats = useMemo(
+    () => ({
+      distance: fmtDist(trips.reduce((s, t) => s + (t.distance || 0), 0)),
+      fuel: `${trips.reduce((s, t) => s + (t.spentFuel || 0), 0).toFixed(1)} L`,
+      driving: fmtDuration(trips.reduce((s, t) => s + (t.duration || 0), 0)),
+      stopped: fmtDuration(stops.reduce((s, t) => s + (t.duration || 0), 0)),
+      stops: stops.length,
+    }),
+    [trips, stops],
+  );
+
+  const currentPos = positions[index];
+  const currentSpeed = currentPos ? Math.round(currentPos.speed * 1.852) : 0;
+  const deviceName = reduxDevices.find((d) => d.id === selectedDeviceId)?.name || '';
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <PageLayout>
-      <Box className={classes.root}>
-        {/* Full Sidebar from ReplayPageNew_4.jsx */}
-        <Paper className={classes.sidebar} square>
-          <Box className={classes.panelHeader}>
-            <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 700 }}>
+    <Box className={classes.root}>
+      {/* ── Map ── */}
+      <MapView>
+        <MapOverlay />
+        <MapGeofence />
+        <MapRoutePath positions={positions} />
+        <MapRoutePoints positions={positions} onClick={onPointClick} showSpeedControl />
+        {index < positions.length && (
+          <MapPositions
+            positions={[positions[index]]}
+            onMarkerClick={onMarkerClick}
+            titleField="fixTime"
+          />
+        )}
+      </MapView>
+      <MapScale />
+      <MapCamera positions={positions} />
+
+      {/* ── Sidebar ── */}
+      <Box className={classes.sidebar}>
+        {/* Header */}
+        <Box className={classes.sidebarHeader}>
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              sx={{ fontWeight: 800, color: '#f1f5f9', fontSize: '0.95rem', lineHeight: 1.2 }}
+            >
               Historique du véhicule
             </Typography>
-            <Box>
-              <IconButton size="small"><InfoOutlined fontSize="small" /></IconButton>
-              <IconButton size="small"><Fullscreen fontSize="small" /></IconButton>
-              <IconButton size="small"><ChevronLeft fontSize="small" /></IconButton>
-            </Box>
+            {loaded && deviceName && (
+              <Typography sx={{ fontSize: '0.72rem', color: '#475569', mt: 0.3 }}>
+                {deviceName}
+              </Typography>
+            )}
           </Box>
-
-          <Box className={classes.dateFilter}>
-            <CalendarToday sx={{ fontSize: 18, color: '#666' }} />
-            <Typography variant="body2">nov. 05, 2025 15:00 - nov. 12, 2025 15:00</Typography>
-          </Box>
-
-          <Box className={classes.miniMapPreview}>
-            <MapView>
-              <MapRoutePath positions={positions} />
-              {currentPosition && <MapPositions positions={[currentPosition]} />}
-            </MapView>
-          </Box>
-
-          <Box className={classes.playbackControlsSidebar}>
-            <Slider
+          {loaded && (
+            <IconButton
+              onClick={handleDownload}
               size="small"
-              value={currentIndex}
-              max={positions.length > 0 ? positions.length - 1 : 0}
-              onChange={(_, v) => setCurrentIndex(v)}
-              sx={{ color: '#5c6bc0' }}
-            />
-            <Box className={classes.controlRow}>
-              <Typography variant="caption" color="textSecondary">15:00:04</Typography>
-              <Typography variant="caption" color="textSecondary">
-                {currentIndex + 1} / {positions.length || 0}
-              </Typography>
-              <Typography variant="caption" color="textSecondary">14:59:35</Typography>
-            </Box>
+              sx={{ color: '#64748b', '&:hover': { color: '#a5b4fc' } }}
+            >
+              <FileDownload sx={{ fontSize: 18 }} />
+            </IconButton>
+          )}
+          {loaded && (
+            <IconButton
+              onClick={handleReset}
+              size="small"
+              sx={{ color: '#64748b', '&:hover': { color: '#f97316' } }}
+            >
+              <Refresh sx={{ fontSize: 18 }} />
+            </IconButton>
+          )}
+          <IconButton
+            onClick={() => navigate(-1)}
+            size="small"
+            sx={{ color: '#64748b', '&:hover': { color: '#ef4444' } }}
+          >
+            <Close sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Box>
 
-            <Box className={classes.controlRow} sx={{ mt: 1 }}>
-              <Select
-                value={speedMultiplier}
-                onChange={(e) => setSpeedMultiplier(e.target.value)}
-                size="small"
-                sx={{ height: 32, fontSize: '0.8rem' }}
-              >
-                {[1, 2, 4, 8].map((s) => <MenuItem key={s} value={s}>{s}x</MenuItem>)}
-              </Select>
-
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton size="small"><SkipPrevious /></IconButton>
-                <IconButton
-                  onClick={() => setPlaying(!playing)}
-                  sx={{ backgroundColor: '#5c6bc0', color: '#fff', '&:hover': { backgroundColor: '#3f51b5' }, mx: 1 }}
-                >
-                  {playing ? <Pause /> : <PlayArrow />}
-                </IconButton>
-                <IconButton size="small"><SkipNext /></IconButton>
-              </Box>
-
-              <Box className={classes.speedDisplaySidebar}>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                  {Math.round(speedFromKnots(currentPosition?.speed || 0, speedUnit))}
-                </Typography>
-                <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>km/h</Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          <Divider />
-
-          <Box sx={{ overflowY: 'auto', flex: 1 }}>
-            <Box className={classes.activityHeader}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>Rapport d'activité</Typography>
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <LocalParking sx={{ fontSize: 18, color: '#1976d2' }} />
-                <Route sx={{ fontSize: 18, color: '#1976d2' }} />
-                <LocalGasStation sx={{ fontSize: 18, color: '#fbc02d' }} />
-                <HighlightOff sx={{ fontSize: 18, color: '#d32f2f' }} />
-                <LocationOn sx={{ fontSize: 18, color: '#4caf50' }} />
-              </Box>
-            </Box>
-
-            <Box className={classes.statsGrid}>
-              <Typography variant="caption" color="primary">223 places</Typography>
-              <Typography variant="caption">📏 928.0 km</Typography>
-              <Typography variant="caption">⛽ 0.0 L</Typography>
-              <Typography variant="caption">🅿️ 124h 23m</Typography>
-              <Typography variant="caption">🏁 43h 13m</Typography>
-            </Box>
-
-            <Box className={classes.movementCard}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Route sx={{ color: '#4caf50', mr: 1 }} />
-                <Typography variant="subtitle2" sx={{ color: '#2e7d32', fontWeight: 700, flex: 1 }}>Mouvement</Typography>
-                <Typography variant="caption" color="textSecondary">1m</Typography>
-              </Box>
-              <Typography variant="caption" display="block">De: <b>05/11/2025, 15:31:14</b></Typography>
-              <Typography variant="caption" display="block">À: <b>05/11/2025, 15:32:18</b></Typography>
-              <Typography variant="caption" display="block" sx={{ mt: 1 }}>Distance: <b>0.00 km</b></Typography>
-              <Typography variant="caption" display="block">Vitesse max: <b>17 km/h</b></Typography>
-              <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-                De: Les Princesses Arrondissement Maârif, Casablanca...
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-
-        {/* Map and Floating Bar */}
-        <Box className={classes.mapContainer}>
-          <MapView>
-            <MapRoutePath positions={positions} />
-            {currentPosition && <MapPositions positions={[currentPosition]} showStatus />}
-          </MapView>
-
-          {/* Floating Playback Bar from Screenshot 2026-05-04 at 03.41.46_2.jpg */}
-          {positions.length > 0 && (
-            <Box className={classes.floatingPlaybackBar}>
-              <IconButton size="small" sx={{ color: '#aaa' }}><InfoOutlined fontSize="small" /></IconButton>
-              <IconButton size="small" sx={{ color: '#aaa' }}><Fullscreen fontSize="small" /></IconButton>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-                <IconButton size="small" sx={{ color: '#fff' }}><SkipPrevious /></IconButton>
-                <IconButton className={classes.playBtnDark} onClick={() => setPlaying(!playing)}>
-                  {playing ? <Pause /> : <PlayArrow />}
-                </IconButton>
-                <IconButton size="small" sx={{ color: '#fff' }}><SkipNext /></IconButton>
-              </Box>
-
-              <Box sx={{ flex: 1, mx: 4, position: 'relative' }}>
-                <Slider
+        {/* ── Filter Form ── */}
+        {!loaded && (
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+            {/* Period presets */}
+            <Stack direction="row" spacing={0.8} mb={2}>
+              {PERIOD_PRESETS.map((p) => (
+                <Chip
+                  key={p.value}
+                  label={p.label}
                   size="small"
-                  value={currentIndex}
-                  max={positions.length - 1}
-                  onChange={(_, v) => setCurrentIndex(v)}
+                  onClick={() => applyPeriod(p.value)}
                   sx={{
-                    color: '#fff',
-                    '& .MuiSlider-thumb': { width: 12, height: 12 },
-                    '& .MuiSlider-rail': { opacity: 0.3 }
+                    height: 28,
+                    fontSize: '0.76rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    color: activePeriod === p.value ? '#a5b4fc' : '#64748b',
+                    borderColor:
+                      activePeriod === p.value ? 'rgba(99,102,241,0.45)' : 'rgba(255,255,255,0.1)',
+                    background: activePeriod === p.value ? 'rgba(99,102,241,0.15)' : 'transparent',
+                    border: '1px solid',
+                    '&:hover': { borderColor: 'rgba(255,255,255,0.25)' },
                   }}
                 />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: -1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, opacity: 0.8 }}>15:02:31</Typography>
-                  <Typography variant="caption" sx={{ fontSize: 10, opacity: 0.8 }}>
-                    {currentIndex + 1} / {positions.length}
-                  </Typography>
-                  <Typography variant="caption" sx={{ fontSize: 10, opacity: 0.8 }}>14:59:35</Typography>
-                </Box>
-              </Box>
+              ))}
+            </Stack>
 
+            {/* Device selector */}
+            <Typography
+              sx={{
+                fontSize: '0.7rem',
+                color: '#475569',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                mb: 0.8,
+              }}
+            >
+              Véhicule
+            </Typography>
+            <Select
+              value={filterDeviceId}
+              onChange={(e) => setFilterDeviceId(e.target.value)}
+              className={classes.glassSelect}
+              IconComponent={KeyboardArrowDown}
+              size="small"
+              fullWidth
+              displayEmpty
+              MenuProps={DARK_MENU}
+              startAdornment={
+                <DirectionsCar sx={{ fontSize: 16, color: '#6366f1', ml: 0.5, mr: -0.5 }} />
+              }
+              sx={{ mb: 2 }}
+            >
+              <MenuItem disabled value="">
+                <em style={{ color: '#64748b' }}>Sélectionnez un véhicule...</em>
+              </MenuItem>
+              {reduxDevices.map((dev) => (
+                <MenuItem key={dev.id} value={dev.id}>
+                  {dev.name}
+                </MenuItem>
+              ))}
+            </Select>
+
+            {/* Date range */}
+            <Typography
+              sx={{
+                fontSize: '0.7rem',
+                color: '#475569',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                mb: 0.8,
+              }}
+            >
+              Période
+            </Typography>
+            <Stack spacing={1} mb={2.5}>
+              <TextField
+                type="datetime-local"
+                size="small"
+                className={classes.dateInput}
+                value={filterFrom}
+                onChange={(e) => {
+                  setFilterFrom(e.target.value);
+                  setActivePeriod('');
+                }}
+                fullWidth
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <CalendarToday sx={{ fontSize: 14, color: '#475569', mr: 1 }} />
+                    ),
+                  },
+                }}
+              />
+              <TextField
+                type="datetime-local"
+                size="small"
+                className={classes.dateInput}
+                value={filterTo}
+                onChange={(e) => {
+                  setFilterTo(e.target.value);
+                  setActivePeriod('');
+                }}
+                fullWidth
+              />
+            </Stack>
+
+            {/* Launch button */}
+            <Box
+              component="button"
+              onClick={handleLoad}
+              disabled={loading || !filterDeviceId}
+              sx={{
+                width: '100%',
+                height: 42,
+                borderRadius: '12px',
+                background:
+                  loading || !filterDeviceId
+                    ? 'rgba(99,102,241,0.2)'
+                    : 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+                border: 'none',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: loading || !filterDeviceId ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                transition: 'opacity 0.15s',
+                '&:hover:not(:disabled)': { opacity: 0.9 },
+              }}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={16} sx={{ color: '#fff', mr: 1 }} />
+                  Chargement...
+                </>
+              ) : (
+                <>
+                  <PlayArrow sx={{ fontSize: 20 }} />
+                  Lancer le replay
+                </>
+              )}
+            </Box>
+          </Box>
+        )}
+
+        {/* ── Replay Controls ── */}
+        {loaded && (
+          <>
+            {/* Date range banner */}
+            <Box
+              sx={{
+                mx: 2,
+                mt: 1.5,
+                mb: 1,
+                px: 2,
+                py: 1,
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <CalendarToday sx={{ fontSize: 14, color: '#6366f1' }} />
+              <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+                {dayjs(positions[0]?.fixTime).format('DD MMM YYYY HH:mm')}
+                {' — '}
+                {dayjs(positions[positions.length - 1]?.fixTime).format('DD MMM YYYY HH:mm')}
+              </Typography>
+            </Box>
+
+            {/* Timeline */}
+            <Box sx={{ px: 2, mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  {currentPos ? formatTime(currentPos.fixTime, 'seconds') : '—'}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: '#475569' }}>
+                  {index + 1} / {positions.length}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  {positions.length > 0
+                    ? formatTime(positions[positions.length - 1].fixTime, 'seconds')
+                    : '—'}
+                </Typography>
+              </Box>
+              <Slider
+                className={classes.slider}
+                min={0}
+                max={positions.length - 1}
+                step={1}
+                value={index}
+                onChange={(_, v) => setIndex(v)}
+                sx={{ py: '6px' }}
+              />
+            </Box>
+
+            {/* Controls row */}
+            <Box sx={{ px: 2, pb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Speed selector */}
               <Select
-                value={speedMultiplier}
-                onChange={(e) => setSpeedMultiplier(e.target.value)}
-                variant="standard"
-                disableUnderline
-                sx={{ color: '#fff', fontSize: '0.8rem', bgcolor: 'rgba(255,255,255,0.1)', px: 1, borderRadius: 1, mr: 2 }}
+                value={playbackSpeed}
+                onChange={(e) => setPlaybackSpeed(e.target.value)}
+                size="small"
+                className={classes.glassSelect}
+                MenuProps={DARK_MENU}
+                IconComponent={KeyboardArrowDown}
+                sx={{ minWidth: 72 }}
               >
-                {[1, 2, 4, 8].map((s) => <MenuItem key={s} value={s}>{s}x</MenuItem>)}
+                {[1, 2, 4, 8].map((s) => (
+                  <MenuItem key={s} value={s}>
+                    {s}x
+                  </MenuItem>
+                ))}
               </Select>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(255,255,255,0.05)', px: 1.5, py: 0.5, borderRadius: 1, mr: 2 }}>
-                <CalendarToday sx={{ fontSize: 14 }} />
-                <Typography variant="caption">nov. 05, 2025 15:00 - nov. 12, 2025 15:00</Typography>
+              {/* Playback buttons */}
+              <Box
+                sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <IconButton
+                  className={classes.ctrlBtn}
+                  onClick={() => {
+                    setPlaying(false);
+                    setIndex(0);
+                  }}
+                  disabled={playing}
+                >
+                  <FirstPage sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  className={classes.ctrlBtn}
+                  onClick={() => setIndex((i) => Math.max(i - 1, 0))}
+                  disabled={playing || index <= 0}
+                >
+                  <FastRewind sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  className={classes.playBtn}
+                  onClick={() => setPlaying(!playing)}
+                  disabled={index >= positions.length - 1}
+                >
+                  {playing ? <Pause sx={{ fontSize: 22 }} /> : <PlayArrow sx={{ fontSize: 22 }} />}
+                </IconButton>
+                <IconButton
+                  className={classes.ctrlBtn}
+                  onClick={() => setIndex((i) => Math.min(i + 1, positions.length - 1))}
+                  disabled={playing || index >= positions.length - 1}
+                >
+                  <FastForward sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  className={classes.ctrlBtn}
+                  onClick={() => {
+                    setPlaying(false);
+                    setIndex(positions.length - 1);
+                  }}
+                  disabled={playing}
+                >
+                  <LastPage sx={{ fontSize: 18 }} />
+                </IconButton>
               </Box>
 
-              <Box className={classes.speedBadgeFloating}>
-                <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                  {Math.round(speedFromKnots(currentPosition?.speed || 0, speedUnit))}
+              {/* Speed badge */}
+              <Box
+                sx={{
+                  background: currentSpeed > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${currentSpeed > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  borderRadius: '10px',
+                  minWidth: 64,
+                  px: 1,
+                  py: 0.5,
+                  textAlign: 'center',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: '1.1rem',
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    color: currentSpeed > 0 ? '#f59e0b' : '#475569',
+                  }}
+                >
+                  {currentSpeed}
                 </Typography>
-                <Typography variant="caption" sx={{ fontWeight: 400 }}>km/h</Typography>
+                <Typography sx={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.04em' }}>
+                  km/h
+                </Typography>
               </Box>
             </Box>
-          )}
-        </Box>
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mx: 2 }} />
+
+            {/* ── Rapport d'activité ── */}
+            <Box sx={{ px: 2, pt: 1.5, pb: 1, flexShrink: 0 }}>
+              <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.9rem', mb: 1.5 }}>
+                Rapport d'activité
+              </Typography>
+
+              {/* Filter chips */}
+              <Stack direction="row" spacing={0.8} mb={1.5} flexWrap="wrap">
+                {[
+                  { key: 'all', label: 'Tous', color: '#6366f1' },
+                  {
+                    key: 'trip',
+                    label: 'Trajets',
+                    color: '#22c55e',
+                    icon: <Route sx={{ fontSize: 12 }} />,
+                  },
+                  {
+                    key: 'stop',
+                    label: 'Arrêts',
+                    color: '#3b82f6',
+                    icon: <LocalParking sx={{ fontSize: 12 }} />,
+                  },
+                ].map((f) => (
+                  <Chip
+                    key={f.key}
+                    label={f.label}
+                    icon={f.icon}
+                    size="small"
+                    onClick={() => setActivityFilter(f.key)}
+                    sx={{
+                      height: 26,
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      color: activityFilter === f.key ? f.color : '#64748b',
+                      borderColor:
+                        activityFilter === f.key ? `${f.color}60` : 'rgba(255,255,255,0.08)',
+                      background: activityFilter === f.key ? `${f.color}18` : 'transparent',
+                      border: '1px solid',
+                      '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
+                    }}
+                  />
+                ))}
+              </Stack>
+
+              {/* Stats row */}
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                {[
+                  { value: stats.stops, label: 'arrêts', color: '#3b82f6' },
+                  { value: stats.distance, label: 'dist.', color: '#22c55e' },
+                  { value: stats.fuel, label: 'fuel', color: '#f59e0b' },
+                  { value: stats.driving, label: 'conduite', color: '#a855f7' },
+                  { value: stats.stopped, label: 'arrêté', color: '#94a3b8' },
+                ].map((s, i) => (
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.4 }}>
+                    <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: s.color }}>
+                      {s.value}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.68rem', color: '#334155' }}>
+                      {s.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mx: 2 }} />
+
+            {/* Activity list */}
+            <Box className={classes.scrollArea} sx={{ px: 2, py: 1.5 }}>
+              {filteredActivity.length === 0 ? (
+                <Typography
+                  sx={{ color: '#334155', fontSize: '0.82rem', textAlign: 'center', py: 3 }}
+                >
+                  Aucune activité disponible
+                </Typography>
+              ) : (
+                filteredActivity.map((item, i) => {
+                  const isTrip = item.type === 'trip';
+                  const accentColor = isTrip ? '#22c55e' : '#3b82f6';
+                  const duration = fmtDuration(item.duration);
+                  const startTime = item.startTime ? dayjs(item.startTime).format('HH:mm') : '—';
+                  const endTime = item.endTime ? dayjs(item.endTime).format('HH:mm') : '—';
+                  return (
+                    <Box key={i} className={classes.activityItem}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.8,
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '8px',
+                              background: `${accentColor}18`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {isTrip ? (
+                              <Route sx={{ fontSize: 14, color: accentColor }} />
+                            ) : (
+                              <LocalParking sx={{ fontSize: 14, color: accentColor }} />
+                            )}
+                          </Box>
+                          <Typography
+                            sx={{ fontSize: '0.82rem', fontWeight: 700, color: accentColor }}
+                          >
+                            {isTrip ? 'Mouvement' : 'Stationnement'}
+                          </Typography>
+                        </Box>
+                        <Typography sx={{ fontSize: '0.72rem', color: '#475569', fontWeight: 600 }}>
+                          {duration}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 1.5, mb: 0.6 }}>
+                        <Typography
+                          sx={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}
+                        >
+                          {startTime}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>→</Typography>
+                        <Typography
+                          sx={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}
+                        >
+                          {endTime}
+                        </Typography>
+                        {isTrip && item.distance > 0 && (
+                          <>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>
+                              ·
+                            </Typography>
+                            <Typography
+                              sx={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}
+                            >
+                              {fmtDist(item.distance)}
+                            </Typography>
+                          </>
+                        )}
+                        {isTrip && item.maxSpeed > 0 && (
+                          <>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>
+                              ·
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+                              {Math.round(item.maxSpeed * 1.852)} km/h max
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+
+                      {(item.startAddress || item.address) && (
+                        <Typography
+                          sx={{ fontSize: '0.7rem', color: '#334155', lineHeight: 1.4 }}
+                          noWrap
+                        >
+                          {item.startAddress || item.address}
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                })
+              )}
+            </Box>
+          </>
+        )}
       </Box>
-    </PageLayout>
+
+      {/* Status card */}
+      {showCard && index < positions.length && (
+        <StatusCard
+          deviceId={selectedDeviceId}
+          position={positions[index]}
+          onClose={() => setShowCard(false)}
+          disableActions
+        />
+      )}
+    </Box>
   );
 };
 

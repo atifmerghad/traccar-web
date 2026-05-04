@@ -1,274 +1,323 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  IconButton,
-} from '@mui/material';
-import {
-  ArrowBack,
-  ArrowForward,
-} from '@mui/icons-material';
+import { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, IconButton } from '@mui/material';
+import { ArrowBack, ArrowForward, GpsFixed, Speed, Analytics, NotificationsActive } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
+import { keyframes } from '@emotion/react';
 
-const useStyles = makeStyles()((theme) => ({
-  leftPanel: {
+const livePulse = keyframes`
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+`;
+
+const useStyles = makeStyles()(() => ({
+  panel: {
     flex: '0 0 50%',
     display: 'flex',
     flexDirection: 'column',
-    padding: theme.spacing(4, 6),
-    background: `linear-gradient(135deg, ${theme.palette.primary.dark || theme.palette.primary.main} 0%, ${theme.palette.primary.main} 50%, ${theme.palette.secondary.main} 100%)`,
-    color: theme.palette.primary.contrastText || 'white',
+    background: 'linear-gradient(160deg, #0c1629 0%, #080d1a 45%, #0a1020 100%)',
     position: 'relative',
     overflow: 'hidden',
     minHeight: '100vh',
-    [theme.breakpoints.down('md')]: {
-      display: 'none',
-    },
+    padding: '36px 48px',
+    '@media (max-width: 900px)': { display: 'none' },
+  },
+  grid: {
+    position: 'absolute',
+    inset: 0,
+    backgroundImage:
+      'linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)',
+    backgroundSize: '52px 52px',
+    pointerEvents: 'none',
+  },
+  glowTop: {
+    position: 'absolute',
+    top: '-15%',
+    left: '-15%',
+    width: '70%',
+    height: '70%',
+    background: 'radial-gradient(ellipse, rgba(99,102,241,0.14) 0%, transparent 65%)',
+    pointerEvents: 'none',
+  },
+  glowBottom: {
+    position: 'absolute',
+    bottom: '-15%',
+    right: '-10%',
+    width: '55%',
+    height: '55%',
+    background: 'radial-gradient(ellipse, rgba(34,197,94,0.07) 0%, transparent 65%)',
+    pointerEvents: 'none',
   },
   logo: {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing(1.5),
-    marginBottom: theme.spacing(8),
+    gap: 12,
+    position: 'relative',
+    zIndex: 1,
+    marginBottom: 48,
   },
   logoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.spacing(1),
-    background: 'rgba(255, 255, 255, 0.2)',
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: theme.palette.primary.light || theme.palette.secondary.light,
+    boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
+    flexShrink: 0,
   },
-  logoText: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  logoTitle: {
-    fontSize: '24px',
-    fontWeight: 700,
-    letterSpacing: '1px',
-    lineHeight: 1,
-  },
-  logoSubtitle: {
-    fontSize: '11px',
-    fontWeight: 400,
-    letterSpacing: '2px',
-    opacity: 0.8,
-    marginTop: theme.spacing(0.25),
-  },
-  leftContent: {
+  content: {
+    position: 'relative',
+    zIndex: 1,
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    maxWidth: '500px',
-    margin: '0 auto',
-    width: '100%',
+    maxWidth: 520,
+    transition: 'opacity 0.25s ease',
   },
-  welcomeTitle: {
-    fontSize: '4.5rem',
-    fontWeight: 700,
-    marginBottom: theme.spacing(2),
+  slideTitle: {
+    fontSize: '3.4rem',
+    fontWeight: 800,
+    color: '#f1f5f9',
     lineHeight: 1.1,
-    [theme.breakpoints.down('lg')]: {
-      fontSize: '4rem',
-    },
-    [theme.breakpoints.down('md')]: {
-      fontSize: '3.5rem',
-    },
-  },
-  trackyHighlight: {
-    color: theme.palette.primary.light || theme.palette.secondary.light,
+    marginBottom: 14,
+    letterSpacing: '-0.025em',
   },
   tagline: {
-    fontSize: '2rem',
-    fontWeight: 400,
-    marginBottom: theme.spacing(4),
-    opacity: 0.95,
-    [theme.breakpoints.down('lg')]: {
-      fontSize: '1.75rem',
-    },
-    [theme.breakpoints.down('md')]: {
-      fontSize: '1.5rem',
-    },
+    fontSize: '1.15rem',
+    fontWeight: 500,
+    color: '#94a3b8',
+    marginBottom: 14,
   },
   description: {
-    fontSize: '1.25rem',
-    lineHeight: 1.7,
-    opacity: 0.9,
-    marginBottom: theme.spacing(8),
-    [theme.breakpoints.down('lg')]: {
-      fontSize: '1.125rem',
-    },
+    fontSize: '0.92rem',
+    lineHeight: 1.8,
+    color: '#64748b',
+    marginBottom: 40,
   },
-  navigation: {
+  featureRow: {
+    display: 'flex',
+    gap: 10,
+    marginBottom: 40,
+  },
+  featureCard: {
+    flex: 1,
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 14,
+    padding: '14px 12px',
+    transition: 'border-color 0.2s',
+    '&:hover': { borderColor: 'rgba(255,255,255,0.14)' },
+  },
+  nav: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing(2),
-    marginTop: 'auto',
+    gap: 10,
+    position: 'relative',
+    zIndex: 1,
   },
-  navButton: {
-    color: theme.palette.primary.contrastText || 'white',
-    minWidth: 'auto',
-    width: 40,
-    height: 40,
-    padding: 0,
-    border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.3)'}`,
+  navBtn: {
+    width: 34,
+    height: 34,
+    color: '#64748b',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      borderColor: 'rgba(255, 255, 255, 0.5)',
-      transform: 'scale(1.1)',
-    },
-    '& svg': {
-      fontSize: '20px',
-    },
-  },
-  dots: {
-    display: 'flex',
-    gap: theme.spacing(1),
-    alignItems: 'center',
+    '&:hover': { background: 'rgba(255,255,255,0.06)', color: '#f1f5f9', borderColor: 'rgba(255,255,255,0.2)' },
   },
   dot: {
+    height: 6,
+    borderRadius: 3,
+    background: 'rgba(255,255,255,0.15)',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  },
+  dotActive: {
+    background: '#6366f1',
+    width: '20px !important',
+  },
+  liveDot: {
     width: 8,
     height: 8,
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    transition: 'background-color 0.3s',
-  },
-  dotActive: {
-    backgroundColor: theme.palette.primary.light || theme.palette.secondary.light,
+    background: '#22c55e',
+    flexShrink: 0,
+    animation: `${livePulse} 2s ease-in-out infinite`,
   },
 }));
 
-const carouselSlides = [
+const SLIDES = [
   {
-    title: 'Welcome to Tracky',
-    highlight: 'Tracky',
-    tagline: 'The smart way to track your fleet',
-    description: 'Tracky helps you monitor, manage, and optimize your vehicles in real time. Get instant insights, live locations, and powerful analytics for your entire fleet —all in one platform.',
+    titleStart: 'Bienvenue sur',
+    titleHighlight: 'Geo',
+    titleEnd: '',
+    tagline: 'La solution intelligente pour votre flotte',
+    description:
+      'Gérez, surveillez et optimisez votre parc de véhicules en temps réel. Localisations live, historiques de trajets et analyses puissantes — tout en un.',
   },
   {
-    title: 'Real-Time Tracking',
-    highlight: 'Tracking',
-    tagline: 'Monitor your fleet in real-time',
-    description: 'See the exact location of all your vehicles on an interactive map. Get instant updates, route history, and detailed analytics to make informed decisions about your fleet operations.',
+    titleStart: 'Suivi',
+    titleHighlight: 'en temps réel',
+    titleEnd: '',
+    tagline: 'Localisations live sur carte interactive',
+    description:
+      "Visualisez l'ensemble de votre flotte sur une carte interactive. Recevez des alertes instantanées et prenez des décisions éclairées en toute situation.",
   },
   {
-    title: 'Smart Analytics',
-    highlight: 'Analytics',
-    tagline: 'Powerful insights at your fingertips',
-    description: 'Access comprehensive reports and analytics to optimize routes, reduce fuel consumption, and improve overall fleet efficiency. Make data-driven decisions with ease.',
+    titleStart: 'Analyses',
+    titleHighlight: 'avancées',
+    titleEnd: '',
+    tagline: 'Des insights pour optimiser vos opérations',
+    description:
+      "Accédez à des rapports détaillés sur les trajets, la consommation et l'efficacité de vos conducteurs. Réduisez vos coûts avec des données fiables.",
   },
   {
-    title: 'Easy Management',
-    highlight: 'Management',
-    tagline: 'Simplify fleet operations',
-    description: 'Manage all your vehicles, drivers, and routes from a single intuitive dashboard. Set up geofences, receive alerts, and keep your fleet running smoothly.',
+    titleStart: 'Gestion',
+    titleHighlight: 'centralisée',
+    titleEnd: '',
+    tagline: 'Un seul tableau de bord pour tout gérer',
+    description:
+      "Pilotez vos véhicules, créez des géofences, configurez des alertes et consultez l'historique complet depuis une interface intuitive et rapide.",
   },
+];
+
+const FEATURES = [
+  { Icon: GpsFixed, label: 'GPS Live', sub: 'Précision < 10m', color: '#6366f1' },
+  { Icon: Speed, label: 'Performances', sub: 'Rapports temps réel', color: '#22c55e' },
+  { Icon: NotificationsActive, label: 'Alertes', sub: 'Notifications push', color: '#f59e0b' },
 ];
 
 const LoginLayoutNew = () => {
   const { classes } = useStyles();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [fading, setFading] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
-    }, 3000); // Change every 3 seconds
-
-    return () => clearInterval(interval);
+  const changeSlide = useCallback((newIndex) => {
+    setFading(true);
+    setTimeout(() => {
+      setCurrentSlide(newIndex);
+      setFading(false);
+    }, 200);
   }, []);
 
-  const handleNextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
-  };
+  useEffect(() => {
+    const id = setInterval(() => {
+      changeSlide((currentSlide + 1) % SLIDES.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [currentSlide, changeSlide]);
 
-  const handlePrevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
-  };
-
-  const handleDotClick = (index) => {
-    setCurrentSlide(index);
-  };
-
-  const currentSlideData = carouselSlides[currentSlide];
+  const slide = SLIDES[currentSlide];
 
   return (
-    <Box className={classes.leftPanel}>
+    <Box className={classes.panel}>
+      <Box className={classes.grid} />
+      <Box className={classes.glowTop} />
+      <Box className={classes.glowBottom} />
+
       {/* Logo */}
       <Box className={classes.logo}>
-        <Box className={classes.logoIcon}>T</Box>
-        <Box className={classes.logoText}>
-          <Typography className={classes.logoTitle}>TRACKY</Typography>
-          <Typography className={classes.logoSubtitle}>VEHICLES TRACKING</Typography>
+        <Box className={classes.logoIcon}>
+          <GpsFixed sx={{ color: '#fff', fontSize: 22 }} />
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '0.12em', lineHeight: 1 }}>
+            GEO
+          </Typography>
+          <Typography sx={{ fontSize: '0.62rem', color: '#475569', letterSpacing: '0.18em', textTransform: 'uppercase', mt: 0.3 }}>
+            Vehicle Tracking
+          </Typography>
         </Box>
       </Box>
 
-      {/* Content */}
-      <Box className={classes.leftContent}>
-        <Typography className={classes.welcomeTitle}>
-          {currentSlideData.title.split(' ').map((word, index, array) => {
-            const words = currentSlideData.title.split(' ');
-            const highlightIndex = words.findIndex(w => 
-              w.toLowerCase().includes(currentSlideData.highlight.toLowerCase())
-            );
-            if (index === highlightIndex) {
-              return (
-                <React.Fragment key={index}>
-                  <span className={classes.trackyHighlight}>{word}</span>
-                  {index < array.length - 1 ? ' ' : ''}
-                </React.Fragment>
-              );
-            }
-            return <React.Fragment key={index}>{word}{index < array.length - 1 ? ' ' : ''}</React.Fragment>;
-          })}
+      {/* Slide content */}
+      <Box className={classes.content} sx={{ opacity: fading ? 0 : 1 }}>
+        <Typography className={classes.slideTitle}>
+          {slide.titleStart && `${slide.titleStart} `}
+          <Box
+            component="span"
+            sx={{
+              background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            {slide.titleHighlight}
+          </Box>
+          {slide.titleEnd && ` ${slide.titleEnd}`}
         </Typography>
-        <Typography className={classes.tagline}>
-          {currentSlideData.tagline}
-        </Typography>
-        <Typography className={classes.description}>
-          {currentSlideData.description}
-        </Typography>
+
+        <Typography className={classes.tagline}>{slide.tagline}</Typography>
+        <Typography className={classes.description}>{slide.description}</Typography>
+
+        {/* Feature cards */}
+        <Box className={classes.featureRow}>
+          {FEATURES.map(({ Icon, label, sub, color }) => (
+            <Box key={label} className={classes.featureCard}>
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '9px',
+                  background: `${color}18`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: 1,
+                }}
+              >
+                <Icon sx={{ fontSize: 16, color }} />
+              </Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0', lineHeight: 1.2 }}>
+                {label}
+              </Typography>
+              <Typography sx={{ fontSize: '0.7rem', color: '#475569', mt: 0.3 }}>{sub}</Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
 
       {/* Navigation */}
-      <Box className={classes.navigation}>
-        <IconButton 
-          className={classes.navButton} 
+      <Box className={classes.nav}>
+        <IconButton
+          className={classes.navBtn}
           size="small"
-          onClick={handlePrevSlide}
+          onClick={() => changeSlide((currentSlide - 1 + SLIDES.length) % SLIDES.length)}
         >
-          <ArrowBack fontSize="small" />
+          <ArrowBack sx={{ fontSize: 16 }} />
         </IconButton>
-        <Box className={classes.dots}>
-          {carouselSlides.map((_, index) => (
+
+        <Box sx={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {SLIDES.map((_, i) => (
             <Box
-              key={index}
-              className={`${classes.dot} ${index === currentSlide ? classes.dotActive : ''}`}
-              onClick={() => handleDotClick(index)}
-              style={{ cursor: 'pointer' }}
+              key={i}
+              className={`${classes.dot} ${i === currentSlide ? classes.dotActive : ''}`}
+              sx={{ width: i === currentSlide ? 20 : 6 }}
+              onClick={() => changeSlide(i)}
             />
           ))}
         </Box>
-        <IconButton 
-          className={classes.navButton} 
+
+        <IconButton
+          className={classes.navBtn}
           size="small"
-          onClick={handleNextSlide}
+          onClick={() => changeSlide((currentSlide + 1) % SLIDES.length)}
         >
-          <ArrowForward fontSize="small" />
+          <ArrowForward sx={{ fontSize: 16 }} />
         </IconButton>
+
+        {/* Live indicator */}
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box className={classes.liveDot} />
+          <Typography sx={{ fontSize: '0.72rem', color: '#475569' }}>Systèmes opérationnels</Typography>
+        </Box>
       </Box>
     </Box>
   );
 };
 
 export default LoginLayoutNew;
-

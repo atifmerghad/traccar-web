@@ -1,10 +1,9 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
-  Box, Paper, Typography, IconButton, Button, Fab, Switch,
+  Box, Typography, IconButton, Button, Fab, Switch,
   TextField, Select, MenuItem, Slider, Divider, Tooltip,
   Snackbar, Alert, CircularProgress,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import {
   ChevronRight, Close, Share, NotificationsOutlined,
   FmdGoodOutlined, MapOutlined, SettingsRemoteOutlined,
@@ -33,8 +32,6 @@ import { useEffectAsync } from '../reactHelper';
 
 dayjs.extend(relativeTime);
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
 const useStyles = makeStyles()((theme) => ({
   mainContainer: {
     flex: 1,
@@ -42,19 +39,15 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    backgroundColor: '#f1f5f9',
+    background: '#080d1a',
   },
-
-  // Full-screen map behind everything
   mapContainer: {
     position: 'absolute',
     inset: 6,
     borderRadius: 8,
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+    boxShadow: '0 2px 24px rgba(0,0,0,0.4)',
   },
-
-  // Left sidebar
   sidebar: {
     position: 'absolute',
     top: 6,
@@ -65,19 +58,22 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: 'column',
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#ffffff',
+    background: 'rgba(8,13,26,0.97)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.08)',
     zIndex: 1000,
-    boxShadow: '0 4px 24px rgba(0,0,0,0.13)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
   },
   vehicleList: {
     flex: 1,
     overflowY: 'auto',
     padding: theme.spacing(1.5),
     scrollbarWidth: 'thin',
-    scrollbarColor: '#e2e8f0 transparent',
+    scrollbarColor: 'rgba(255,255,255,0.1) transparent',
     '&::-webkit-scrollbar': { width: 4 },
     '&::-webkit-scrollbar-track': { background: 'transparent' },
-    '&::-webkit-scrollbar-thumb': { background: '#e2e8f0', borderRadius: 4 },
+    '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.12)', borderRadius: 4 },
   },
   expandFab: {
     position: 'absolute',
@@ -87,9 +83,10 @@ const useStyles = makeStyles()((theme) => ({
     width: 36,
     height: 36,
     minHeight: 'unset',
-    backgroundColor: '#fff',
-    color: '#64748b',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    background: 'rgba(8,13,26,0.9)',
+    color: '#94a3b8',
+    border: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
   },
   rightToolbar: {
     position: 'absolute',
@@ -100,36 +97,30 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
-    backgroundColor: '#ffffff',
+    background: 'rgba(8,13,26,0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 14,
     padding: '10px 7px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.14)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
   },
-  toolbarDivider: {
-    height: 1,
-    backgroundColor: '#f1f5f9',
-    margin: '4px 0',
-  },
-  toolbarBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: '10px !important',
-    color: '#64748b',
-  },
-  toolbarBtnActive: {
-    backgroundColor: '#6366f1 !important',
-    color: '#fff !important',
-  },
+  toolbarDivider: { height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' },
+  toolbarBtn: { width: 38, height: 38, borderRadius: '10px !important', color: '#94a3b8' },
+  toolbarBtnActive: { background: '#6366f1 !important', color: '#fff !important' },
   panel: {
     position: 'absolute',
     top: 6,
     right: 6,
     width: 360,
     height: 'calc(100% - 12px)',
-    backgroundColor: '#fff',
+    background: 'rgba(8,13,26,0.97)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 12,
     zIndex: 1003,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -139,10 +130,10 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '20px 20px 16px',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
     flexShrink: 0,
   },
-  panelTitle: { fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' },
+  panelTitle: { fontWeight: 800, fontSize: '1.1rem', color: '#f1f5f9' },
   panelSubtitle: { fontSize: '0.8rem', color: '#6366f1', fontWeight: 600 },
   panelBody: { flex: 1, overflowY: 'auto', padding: '12px 20px' },
   panelRow: {
@@ -150,25 +141,13 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     gap: 14,
     padding: '14px 0',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
     cursor: 'pointer',
   },
-  panelRowIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  panelRowTitle: { fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' },
+  panelRowIcon: { width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  panelRowTitle: { fontWeight: 600, fontSize: '0.9rem', color: '#e2e8f0' },
   panelRowSub: { fontSize: '0.75rem', color: '#94a3b8' },
-  commandGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-  },
+  commandGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
   commandBtn: {
     display: 'flex',
     flexDirection: 'column',
@@ -176,23 +155,13 @@ const useStyles = makeStyles()((theme) => ({
     gap: 8,
     padding: '18px 10px',
     borderRadius: 12,
-    border: '1.5px solid #f1f5f9',
+    border: '1.5px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.03)',
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
-  commandIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapTypeGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-    marginBottom: 20,
-  },
+  commandIcon: { width: 50, height: 50, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  mapTypeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 },
   mapTypeBtn: {
     display: 'flex',
     flexDirection: 'column',
@@ -203,6 +172,9 @@ const useStyles = makeStyles()((theme) => ({
     cursor: 'pointer',
     fontSize: '0.8rem',
     fontWeight: 600,
+    border: '1.5px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#94a3b8',
   },
 }));
 
@@ -211,13 +183,8 @@ const useStyles = makeStyles()((theme) => ({
 const SharePanel = ({ vehicle, classes, onClose }) => {
   const lat = vehicle?.position?.latitude;
   const lng = vehicle?.position?.longitude;
-
-  const openGoogleMaps = () => {
-    if (lat && lng) window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
-  };
-  const openWaze = () => {
-    if (lat && lng) window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank');
-  };
+  const openGoogleMaps = () => { if (lat && lng) window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank'); };
+  const openWaze = () => { if (lat && lng) window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank'); };
 
   return (
     <Box className={classes.panel}>
@@ -226,12 +193,12 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Partager les Données</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         {[
-          { icon: <MapOutlined />, bg: '#eff6ff', color: '#3b82f6', title: 'Données de Base', sub: 'Plaque, localisation et statut' },
-          { icon: <DirectionsCar />, bg: '#f5f3ff', color: '#6366f1', title: 'Données Complètes', sub: 'Toutes les informations du véhicule' },
+          { icon: <MapOutlined />, bg: 'rgba(59,130,246,0.15)', color: '#3b82f6', title: 'Données de Base', sub: 'Plaque, localisation et statut' },
+          { icon: <DirectionsCar />, bg: 'rgba(99,102,241,0.15)', color: '#6366f1', title: 'Données Complètes', sub: 'Toutes les informations du véhicule' },
         ].map((item, i) => (
           <Box key={i} className={classes.panelRow}>
             <Box className={classes.panelRowIcon} sx={{ bgcolor: item.bg }}>
@@ -241,36 +208,29 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
               <Typography className={classes.panelRowTitle}>{item.title}</Typography>
               <Typography className={classes.panelRowSub}>{item.sub}</Typography>
             </Box>
-            <ChevronRight sx={{ color: '#cbd5e1', fontSize: 18 }} />
+            <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
           </Box>
         ))}
-
-        <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, mt: 2, mb: 1 }}>
-          Partager la Localisation
-        </Typography>
-
+        <Typography sx={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600, mt: 2, mb: 1 }}>Partager la Localisation</Typography>
         <Box className={classes.panelRow} onClick={openGoogleMaps}>
-          <Box className={classes.panelRowIcon} sx={{ bgcolor: '#fef3c7' }}>
+          <Box className={classes.panelRowIcon} sx={{ bgcolor: 'rgba(245,158,11,0.15)' }}>
             <MyLocation sx={{ color: '#f59e0b' }} />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography className={classes.panelRowTitle}>Google Maps</Typography>
-            <Typography className={classes.panelRowSub}>
-              {lat ? `${lat.toFixed(5)}, ${lng?.toFixed(5)}` : 'Position non disponible'}
-            </Typography>
+            <Typography className={classes.panelRowSub}>{lat ? `${lat.toFixed(5)}, ${lng?.toFixed(5)}` : 'Position non disponible'}</Typography>
           </Box>
-          <ChevronRight sx={{ color: '#cbd5e1', fontSize: 18 }} />
+          <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
         </Box>
-
         <Box className={classes.panelRow} onClick={openWaze}>
-          <Box className={classes.panelRowIcon} sx={{ bgcolor: '#ecfdf5' }}>
+          <Box className={classes.panelRowIcon} sx={{ bgcolor: 'rgba(16,185,129,0.15)' }}>
             <FmdGoodOutlined sx={{ color: '#10b981' }} />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography className={classes.panelRowTitle}>Waze</Typography>
             <Typography className={classes.panelRowSub}>Naviguer avec Waze</Typography>
           </Box>
-          <ChevronRight sx={{ color: '#cbd5e1', fontSize: 18 }} />
+          <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
         </Box>
       </Box>
     </Box>
@@ -281,30 +241,23 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
 
 const AlertsPanel = ({ vehicle, classes, onClose }) => {
   const [enabled, setEnabled] = useState({});
-  const [saving, setSaving] = useState(false);
-
-  // Fetch existing notifications linked to this device
   useEffect(() => {
     if (!vehicle?.id) return;
     fetch(`/api/notifications?deviceId=${vehicle.id}`)
       .then((r) => r.ok ? r.json() : [])
-      .then((notifs) => {
-        const map = {};
-        notifs.forEach((n, i) => { map[n.type] = true; });
-        setEnabled(map);
-      })
+      .then((notifs) => { const map = {}; notifs.forEach((n) => { map[n.type] = true; }); setEnabled(map); })
       .catch(() => { });
   }, [vehicle?.id]);
 
   const alerts = [
-    { key: 'overspeed', icon: <SpeedIcon />, bg: '#eff6ff', color: '#3b82f6', label: 'Alerte de Vitesse' },
-    { key: 'ignitionOn', icon: <DirectionsCar />, bg: '#f0fdf4', color: '#22c55e', label: 'Alerte de Démarrage' },
-    { key: 'lowBattery', icon: <BatteryAlertOutlined />, bg: '#fffbeb', color: '#f59e0b', label: 'Alerte Batterie Faible' },
-    { key: 'deviceOffline', icon: <PowerOffOutlined />, bg: '#faf5ff', color: '#a855f7', label: 'Alerte Hors Ligne' },
-    { key: 'alarm', icon: <LocalShipping />, bg: '#fff7ed', color: '#f97316', label: 'Alarme Générale' },
-    { key: 'sos', icon: <SportsMotorsports />, bg: '#fdf2f8', color: '#ec4899', label: 'Alerte SOS' },
-    { key: 'hardBraking', icon: <Stop />, bg: '#fef2f2', color: '#ef4444', label: 'Alerte de Choc' },
-    { key: 'geofenceEnter', icon: <FmdGoodOutlined />, bg: '#ecfdf5', color: '#10b981', label: 'Entrée Géofence' },
+    { key: 'overspeed', icon: <SpeedIcon />, bg: 'rgba(59,130,246,0.15)', color: '#3b82f6', label: 'Alerte de Vitesse' },
+    { key: 'ignitionOn', icon: <DirectionsCar />, bg: 'rgba(34,197,94,0.15)', color: '#22c55e', label: 'Alerte de Démarrage' },
+    { key: 'lowBattery', icon: <BatteryAlertOutlined />, bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', label: 'Alerte Batterie Faible' },
+    { key: 'deviceOffline', icon: <PowerOffOutlined />, bg: 'rgba(168,85,247,0.15)', color: '#a855f7', label: 'Alerte Hors Ligne' },
+    { key: 'alarm', icon: <LocalShipping />, bg: 'rgba(249,115,22,0.15)', color: '#f97316', label: 'Alarme Générale' },
+    { key: 'sos', icon: <SportsMotorsports />, bg: 'rgba(236,72,153,0.15)', color: '#ec4899', label: 'Alerte SOS' },
+    { key: 'hardBraking', icon: <Stop />, bg: 'rgba(239,68,68,0.15)', color: '#ef4444', label: 'Alerte de Choc' },
+    { key: 'geofenceEnter', icon: <FmdGoodOutlined />, bg: 'rgba(16,185,129,0.15)', color: '#10b981', label: 'Entrée Géofence' },
   ];
 
   return (
@@ -314,7 +267,7 @@ const AlertsPanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Alertes</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         {alerts.map((item) => (
@@ -323,12 +276,8 @@ const AlertsPanel = ({ vehicle, classes, onClose }) => {
               <Box sx={{ color: item.color, display: 'flex' }}>{item.icon}</Box>
             </Box>
             <Typography className={classes.panelRowTitle} sx={{ flex: 1 }}>{item.label}</Typography>
-            <Switch
-              size="small"
-              checked={!!enabled[item.key]}
-              onChange={() => setEnabled((p) => ({ ...p, [item.key]: !p[item.key] }))}
-              sx={{ '& .MuiSwitch-thumb': { boxShadow: 'none' }, '& .Mui-checked': { color: '#6366f1' } }}
-            />
+            <Switch size="small" checked={!!enabled[item.key]} onChange={() => setEnabled((p) => ({ ...p, [item.key]: !p[item.key] }))}
+              sx={{ '& .Mui-checked': { color: '#6366f1' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: 'rgba(99,102,241,0.4)' } }} />
           </Box>
         ))}
       </Box>
@@ -349,30 +298,24 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      // Build WKT circle using turf-like polygon approximation
-      const steps = 64;
-      const R = 6371000;
-      const coords = [];
-      for (let i = 0; i <= steps; i++) {
-        const angle = (i / steps) * 2 * Math.PI;
-        const dLat = (radius * 1000 * Math.cos(angle)) / R;
-        const dLng = (radius * 1000 * Math.sin(angle)) / (R * Math.cos((lat * Math.PI) / 180));
-        coords.push(`${(lng + (dLng * 180) / Math.PI).toFixed(6)} ${(lat + (dLat * 180) / Math.PI).toFixed(6)}`);
-      }
       const wkt = `CIRCLE (${lng.toFixed(6)} ${lat.toFixed(6)}, ${Math.round(radius * 1000)})`;
-
       const res = await fetch('/api/geofences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, area: wkt, calendarId: 0 }),
       });
-      if (res.ok) {
-        onSaved?.();
-        onClose();
-      }
-    } finally {
-      setSaving(false);
-    }
+      if (res.ok) { onSaved?.(); onClose(); }
+    } finally { setSaving(false); }
+  };
+
+  const darkInput = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px', background: 'rgba(255,255,255,0.06)', color: '#f1f5f9',
+      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+    },
+    '& input::placeholder': { color: '#475569', opacity: 1 },
   };
 
   return (
@@ -382,64 +325,36 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
           <Typography className={classes.panelTitle}>Géofences</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
-        <Box sx={{ bgcolor: '#f0f9ff', borderRadius: 2, p: 1.5, mb: 2.5 }}>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#0369a1', mb: 0.5 }}>
-            Créer une géofence circulaire
-          </Typography>
-          <Typography sx={{ fontSize: '0.77rem', color: '#0ea5e9', lineHeight: 1.6 }}>
-            La géofence sera centrée sur la position actuelle du véhicule.
-          </Typography>
+        <Box sx={{ bgcolor: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 2, p: 1.5, mb: 2.5 }}>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', mb: 0.5 }}>Créer une géofence circulaire</Typography>
+          <Typography sx={{ fontSize: '0.77rem', color: '#7dd3fc', lineHeight: 1.6 }}>La géofence sera centrée sur la position actuelle du véhicule.</Typography>
         </Box>
-
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', mb: 0.5 }}>
-          Nom <span style={{ color: '#ef4444' }}>*</span>
-        </Typography>
-        <TextField
-          fullWidth size="small" placeholder="ex: Maison, Bureau, Zone de livraison"
-          value={name} onChange={(e) => setName(e.target.value)}
-          sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-        />
-
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8', mb: 0.5 }}>Nom <span style={{ color: '#ef4444' }}>*</span></Typography>
+        <TextField fullWidth size="small" placeholder="ex: Maison, Bureau, Zone de livraison" value={name} onChange={(e) => setName(e.target.value)} sx={{ mb: 2.5, ...darkInput }} />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>Rayon</Typography>
-          <Box sx={{ bgcolor: '#6366f1', color: '#fff', borderRadius: 1, px: 1.5, py: 0.25, fontSize: '0.77rem', fontWeight: 700 }}>
-            {Math.round(radius * 1000)} m
-          </Box>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8' }}>Rayon</Typography>
+          <Box sx={{ bgcolor: '#6366f1', color: '#fff', borderRadius: 1, px: 1.5, py: 0.25, fontSize: '0.77rem', fontWeight: 700 }}>{Math.round(radius * 1000)} m</Box>
         </Box>
-        <Slider
-          value={radius} min={0.1} max={5} step={0.1}
-          onChange={(_, v) => setRadius(v)}
-          sx={{ color: '#6366f1', mb: 2.5 }}
-        />
-
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', mb: 1 }}>
-          📍 Position actuelle
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, fontSize: '0.82rem' }}>
-          <Typography sx={{ fontSize: '0.82rem', color: '#64748b' }}>Lat:</Typography>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600 }}>{lat.toFixed(5)}</Typography>
+        <Slider value={radius} min={0.1} max={5} step={0.1} onChange={(_, v) => setRadius(v)} sx={{ color: '#6366f1', mb: 2.5 }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8', mb: 1 }}>📍 Position actuelle</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
+          <Typography sx={{ fontSize: '0.82rem', color: '#475569' }}>Lat:</Typography>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0' }}>{lat.toFixed(5)}</Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, mb: 2.5 }}>
-          <Typography sx={{ fontSize: '0.82rem', color: '#64748b' }}>Lng:</Typography>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600 }}>{lng.toFixed(5)}</Typography>
+          <Typography sx={{ fontSize: '0.82rem', color: '#475569' }}>Lng:</Typography>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0' }}>{lng.toFixed(5)}</Typography>
         </Box>
-
         <Box sx={{ display: 'flex', gap: 1.5 }}>
-          <Button
-            fullWidth variant="contained" disableElevation
-            disabled={!name.trim() || saving}
-            onClick={handleSave}
-            sx={{ bgcolor: '#6366f1', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#4f46e5' } }}
-          >
+          <Button fullWidth variant="contained" disableElevation disabled={!name.trim() || saving} onClick={handleSave}
+            sx={{ bgcolor: '#6366f1', borderRadius: 2, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#4f46e5' } }}>
             {saving ? '...' : '✓ Enregistrer'}
           </Button>
-          <Button
-            fullWidth variant="outlined" onClick={onClose}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: '#e2e8f0', color: '#64748b' }}
-          >
+          <Button fullWidth variant="outlined" onClick={onClose}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8', '&:hover': { borderColor: 'rgba(255,255,255,0.2)', bgcolor: 'rgba(255,255,255,0.04)' } }}>
             Annuler
           </Button>
         </Box>
@@ -467,8 +382,9 @@ const MapSettingsPanel = ({ classes, onClose }) => {
   const Setting = ({ label, sub, checked, onChange }) => (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75 }}>
-        <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: '#1e293b' }}>{label}</Typography>
-        <Switch size="small" checked={checked} onChange={onChange} />
+        <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: '#f1f5f9' }}>{label}</Typography>
+        <Switch size="small" checked={checked} onChange={onChange}
+          sx={{ '& .Mui-checked': { color: '#6366f1' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: 'rgba(99,102,241,0.4)' } }} />
       </Box>
       {sub && <Typography sx={{ fontSize: '0.73rem', color: '#94a3b8', pb: 0.5 }}>{sub}</Typography>}
     </Box>
@@ -478,43 +394,37 @@ const MapSettingsPanel = ({ classes, onClose }) => {
     <Box className={classes.panel}>
       <Box className={classes.panelHeader}>
         <Typography className={classes.panelTitle}>Paramètres de la carte</Typography>
-        <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', mb: 1.5 }}>Type de carte</Typography>
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1.5 }}>Type de carte</Typography>
         <Box className={classes.mapTypeGrid}>
           {MAP_TYPES.map((t) => (
-            <Box key={t.key} className={`${classes.mapTypeBtn} ${mapType === t.key ? 'selected' : ''}`}
-              onClick={() => setMapType(t.key)}>
+            <Box key={t.key} className={classes.mapTypeBtn} onClick={() => setMapType(t.key)}
+              sx={mapType === t.key ? { border: '1.5px solid #6366f1 !important', bgcolor: 'rgba(99,102,241,0.15) !important', color: '#818cf8 !important' } : {}}>
               <span style={{ fontSize: 22 }}>{t.emoji}</span>
               {t.label}
             </Box>
           ))}
         </Box>
-
-        <Divider sx={{ my: 2 }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', mb: 1 }}>Actualisation automatique</Typography>
+        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Actualisation automatique</Typography>
         <Setting label="Activer l'actualisation" checked={autoRefresh} onChange={() => setAutoRefresh(!autoRefresh)} />
         {autoRefresh && (
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: '0.8rem', color: '#64748b', mb: 1 }}>Intervalle (secondes)</Typography>
-            <Select fullWidth size="small" value={interval_} onChange={(e) => setInterval_(e.target.value)} sx={{ borderRadius: 2 }}>
-              {['5', '10', '30', '60'].map((v) => (
-                <MenuItem key={v} value={v}>{v} secondes</MenuItem>
-              ))}
+            <Typography sx={{ fontSize: '0.8rem', color: '#475569', mb: 1 }}>Intervalle (secondes)</Typography>
+            <Select fullWidth size="small" value={interval_} onChange={(e) => setInterval_(e.target.value)}
+              sx={{ borderRadius: 2, background: 'rgba(255,255,255,0.06)', color: '#f1f5f9', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' }, '& .MuiSvgIcon-root': { color: '#475569' } }}>
+              {['5', '10', '30', '60'].map((v) => <MenuItem key={v} value={v}>{v} secondes</MenuItem>)}
             </Select>
           </Box>
         )}
-
-        <Divider sx={{ my: 2 }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', mb: 1 }}>Mode de suivi</Typography>
-        <Setting label="Verrouiller la caméra" checked={lockCamera} onChange={() => setLockCamera(!lockCamera)}
-          sub="Le zoom et l'inclinaison sont fixés pendant le suivi." />
-
-        <Divider sx={{ my: 2 }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', mb: 1 }}>Mouvement</Typography>
-        <Setting label="Transitions fluides" checked={smoothMovement} onChange={() => setSmoothMovement(!smoothMovement)}
-          sub="Les véhicules se déplacent en douceur entre les positions." />
+        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Mode de suivi</Typography>
+        <Setting label="Verrouiller la caméra" checked={lockCamera} onChange={() => setLockCamera(!lockCamera)} sub="Le zoom et l'inclinaison sont fixés pendant le suivi." />
+        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Mouvement</Typography>
+        <Setting label="Transitions fluides" checked={smoothMovement} onChange={() => setSmoothMovement(!smoothMovement)} sub="Les véhicules se déplacent en douceur entre les positions." />
       </Box>
     </Box>
   );
@@ -528,12 +438,12 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
 
   const COMMANDS = [
-    { key: 'engineResume', label: 'Démarrer', icon: <PlayArrow sx={{ fontSize: 24 }} />, bg: '#dcfce7', color: '#16a34a' },
-    { key: 'engineStop', label: 'Arrêter', icon: <Stop sx={{ fontSize: 24 }} />, bg: '#fee2e2', color: '#dc2626' },
-    { key: 'deviceReboot', label: 'Réinitialiser', icon: <RestartAlt sx={{ fontSize: 24 }} />, bg: '#f5f3ff', color: '#7c3aed' },
-    { key: 'doorUnlock', label: 'Déverrouiller', icon: <LockOpen sx={{ fontSize: 24 }} />, bg: '#fff7ed', color: '#ea580c' },
-    { key: 'outputControl', label: 'Klaxon', icon: <VolumeUp sx={{ fontSize: 24 }} />, bg: '#eff6ff', color: '#2563eb' },
-    { key: 'getLocation', label: 'Localisation SMS', icon: <Sms sx={{ fontSize: 24 }} />, bg: '#f8fafc', color: '#475569' },
+    { key: 'engineResume', label: 'Démarrer', icon: <PlayArrow sx={{ fontSize: 24 }} />, bg: 'rgba(22,163,74,0.2)', color: '#4ade80' },
+    { key: 'engineStop', label: 'Arrêter', icon: <Stop sx={{ fontSize: 24 }} />, bg: 'rgba(220,38,38,0.2)', color: '#f87171' },
+    { key: 'deviceReboot', label: 'Réinitialiser', icon: <RestartAlt sx={{ fontSize: 24 }} />, bg: 'rgba(124,58,237,0.2)', color: '#a78bfa' },
+    { key: 'doorUnlock', label: 'Déverrouiller', icon: <LockOpen sx={{ fontSize: 24 }} />, bg: 'rgba(234,88,12,0.2)', color: '#fb923c' },
+    { key: 'outputControl', label: 'Klaxon', icon: <VolumeUp sx={{ fontSize: 24 }} />, bg: 'rgba(37,99,235,0.2)', color: '#60a5fa' },
+    { key: 'getLocation', label: 'Localisation SMS', icon: <Sms sx={{ fontSize: 24 }} />, bg: 'rgba(100,116,139,0.2)', color: '#94a3b8' },
   ];
 
   const sendCommand = async () => {
@@ -550,13 +460,10 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
         setSelected(null);
       } else {
         const err = await res.json();
-        setSnack({ open: true, msg: err.message || 'Erreur lors de l\'envoi', severity: 'error' });
+        setSnack({ open: true, msg: err.message || "Erreur lors de l'envoi", severity: 'error' });
       }
-    } catch {
-      setSnack({ open: true, msg: 'Erreur réseau', severity: 'error' });
-    } finally {
-      setSending(false);
-    }
+    } catch { setSnack({ open: true, msg: 'Erreur réseau', severity: 'error' }); }
+    finally { setSending(false); }
   };
 
   return (
@@ -566,79 +473,56 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Commandes</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         <Box className={classes.commandGrid}>
           {COMMANDS.map((cmd) => (
-            <Box
-              key={cmd.key}
-              className={classes.commandBtn}
-              onClick={() => setSelected(cmd.key)}
-              style={{
-                borderColor: selected === cmd.key ? '#6366f1' : '#f1f5f9',
-                backgroundColor: selected === cmd.key ? '#f5f3ff' : '#fff',
-              }}
-            >
+            <Box key={cmd.key} className={classes.commandBtn} onClick={() => setSelected(cmd.key)}
+              sx={selected === cmd.key ? { borderColor: '#6366f1 !important', bgcolor: 'rgba(99,102,241,0.15) !important' } : {}}>
               <Box className={classes.commandIcon} sx={{ bgcolor: cmd.bg }}>
                 <Box sx={{ color: cmd.color, display: 'flex' }}>{cmd.icon}</Box>
               </Box>
-              <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#1e293b', textAlign: 'center' }}>
-                {cmd.label}
-              </Typography>
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#e2e8f0', textAlign: 'center' }}>{cmd.label}</Typography>
             </Box>
           ))}
         </Box>
       </Box>
-      <Box sx={{ p: 2, borderTop: '1px solid #f1f5f9' }}>
-        <Button
-          fullWidth variant="contained" disableElevation
-          disabled={!selected || sending}
-          onClick={sendCommand}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}
-        >
+      <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Button fullWidth variant="contained" disableElevation disabled={!selected || sending} onClick={sendCommand}
+          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
           {sending ? 'Envoi…' : 'Envoyer la commande'}
         </Button>
       </Box>
-      <Snackbar
-        open={snack.open}
-        autoHideDuration={3000}
-        onClose={() => setSnack((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity={snack.severity} sx={{ borderRadius: 2 }}>
-          {snack.msg}
-        </Alert>
+      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity={snack.severity} sx={{ borderRadius: 2 }}>{snack.msg}</Alert>
       </Snackbar>
     </Box>
   );
 };
 
-// ─── Right toolbar button config ──────────────────────────────────────────────
+// ─── Right toolbar config ─────────────────────────────────────────────────────
 
-// Mirror of what the screenshot shows on the right edge
 const RIGHT_TOOLBAR = [
-  { key: 'refresh', Icon: Refresh, title: 'Actualiser', group: 'top' },
-  null,  // divider
-  { key: 'share', Icon: Share, title: 'Partager', group: 'panels' },
-  { key: 'geofence', Icon: FmdGoodOutlined, title: 'Géofence', group: 'panels' },
-  { key: 'settings', Icon: MapOutlined, title: 'Carte', group: 'panels' },
-  { key: 'commands', Icon: SettingsRemoteOutlined, title: 'Commandes', group: 'panels' },
-  { key: 'alerts', Icon: NotificationsOutlined, title: 'Alertes', group: 'panels' },
-  null,  // divider
-  { key: 'zoomIn', Icon: ZoomIn, title: 'Zoom +', group: 'map' },
-  { key: 'zoomOut', Icon: ZoomOut, title: 'Zoom −', group: 'map' },
-  { key: 'locate', Icon: MyLocationOutlined, title: 'Ma position', group: 'map' },
-  { key: 'history', Icon: HistoryOutlined, title: 'Historique', group: 'map' },
+  { key: 'refresh', Icon: Refresh, title: 'Actualiser' },
+  null,
+  { key: 'share', Icon: Share, title: 'Partager' },
+  { key: 'geofence', Icon: FmdGoodOutlined, title: 'Géofence' },
+  { key: 'settings', Icon: MapOutlined, title: 'Carte' },
+  { key: 'commands', Icon: SettingsRemoteOutlined, title: 'Commandes' },
+  { key: 'alerts', Icon: NotificationsOutlined, title: 'Alertes' },
+  null,
+  { key: 'zoomIn', Icon: ZoomIn, title: 'Zoom +' },
+  { key: 'zoomOut', Icon: ZoomOut, title: 'Zoom −' },
+  { key: 'locate', Icon: MyLocationOutlined, title: 'Ma position' },
+  { key: 'history', Icon: HistoryOutlined, title: 'Historique' },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const MainPageNew = () => {
-  const theme = useTheme();
   const { classes } = useStyles();
   const dispatch = useDispatch();
-  const t = useTranslation();
 
   const [searchValue, setSearchValue] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -646,7 +530,7 @@ const MainPageNew = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [loadingData, setLoadingData] = useState(false);
 
-  const [filter, setFilter] = usePersistedState('filter', { statuses: [], groups: [] });
+  const [, setFilter] = usePersistedState('filter', { statuses: [], groups: [] });
   const [filterSort] = usePersistedState('filterSort', '');
   const [filterMap] = usePersistedState('filterMap', false);
 
@@ -655,27 +539,19 @@ const MainPageNew = () => {
   const devices = useSelector((state) => state.devices.items);
   const [filteredPositions, setFilteredPositions] = useState([]);
   const [filteredDevices, setFilteredDevices] = useState([]);
-
   const speedUnit = useAttributePreference('speedUnit', 'kn');
 
-  // ── Auto-fetch + polling ───────────────────────────────────────────────────
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoadingData(true);
     try {
-      const [devRes, posRes] = await Promise.all([
-        fetch('/api/devices'),
-        fetch('/api/positions'),
-      ]);
+      const [devRes, posRes] = await Promise.all([fetch('/api/devices'), fetch('/api/positions')]);
       if (devRes.ok) dispatch(devicesActions.refresh(await devRes.json()));
       if (posRes.ok) {
         const posData = await posRes.json();
         if (posData?.length > 0) dispatch(sessionActions.updatePositions(posData));
       }
-    } catch (e) {
-      console.error('Fetch error:', e);
-    } finally {
-      setLoadingData(false);
-    }
+    } catch (e) { console.error('Fetch error:', e); }
+    finally { setLoadingData(false); }
   }, [dispatch]);
 
   useEffectAsync(async () => {
@@ -684,9 +560,7 @@ const MainPageNew = () => {
     return () => clearInterval(id);
   }, []);
 
-  // ── Filtering by filter tab ────────────────────────────────────────────────
   const derivedFilter = useMemo(() => {
-    if (activeFilter === 'all') return { statuses: [], groups: [] };
     if (activeFilter === 'moving') return { statuses: ['online'], groups: [] };
     if (activeFilter === 'parked') return { statuses: ['offline'], groups: [] };
     return { statuses: [], groups: [] };
@@ -694,39 +568,27 @@ const MainPageNew = () => {
 
   useFilter(searchValue, derivedFilter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
 
-  // ── Vehicle data transformation ────────────────────────────────────────────
-  const vehicles = useMemo(() => {
-    return filteredDevices.map((device) => {
-      const position = positions[device.id];
-      const speed = position?.speed != null ? Math.round(speedFromKnots(position.speed, speedUnit)) : 0;
-      const isMoving = speed > 0;
-      const status = device.status === 'online' ? (isMoving ? 'Mouvement' : 'Garé') : 'Offline';
-      const statusColor = device.status === 'online'
-        ? (isMoving ? '#10b981' : '#3b82f6')
-        : '#94a3b8';
-      const timeAgo = device.lastUpdate ? dayjs(device.lastUpdate).fromNow(true) : '—';
-      const odometer = (position?.attributes?.odometer || position?.attributes?.totalDistance || 0) / 1000;
-      const fuel = position?.attributes?.fuel || position?.attributes?.volume || 0;
-      const fuelCapacity = device.attributes?.fuelCapacity || 100;
-      const fuelPercentage = fuelCapacity > 0 ? Math.min(100, Math.round((fuel / fuelCapacity) * 100)) : 0;
-      const distance = (position?.attributes?.totalDistance || 0) / 1000;
-      const consumption = position?.attributes?.fuelConsumption || 0;
+  const vehicles = useMemo(() => filteredDevices.map((device) => {
+    const position = positions[device.id];
+    const speed = position?.speed != null ? Math.round(speedFromKnots(position.speed, speedUnit)) : 0;
+    const isMoving = speed > 0;
+    const status = device.status === 'online' ? (isMoving ? 'Mouvement' : 'Garé') : 'Offline';
+    const statusColor = device.status === 'online' ? (isMoving ? '#10b981' : '#3b82f6') : '#94a3b8';
+    const timeAgo = device.lastUpdate ? dayjs(device.lastUpdate).fromNow(true) : '—';
+    const odometer = (position?.attributes?.odometer || position?.attributes?.totalDistance || 0) / 1000;
+    const fuel = position?.attributes?.fuel || position?.attributes?.volume || 0;
+    const fuelCapacity = device.attributes?.fuelCapacity || 100;
+    const fuelPercentage = fuelCapacity > 0 ? Math.min(100, Math.round((fuel / fuelCapacity) * 100)) : 0;
+    const distance = (position?.attributes?.totalDistance || 0) / 1000;
+    const consumption = position?.attributes?.fuelConsumption || 0;
+    return {
+      id: device.id.toString(), name: device.name || device.uniqueId || `Appareil ${device.id}`,
+      status, statusColor, timeAgo, speed, odometer, consumption,
+      distance: parseFloat(distance.toFixed(1)), fuel: parseFloat(fuel.toFixed(1)),
+      fuelPercentage, type: device.category || 'Vehicle', device, position,
+    };
+  }), [filteredDevices, positions, speedUnit]);
 
-      return {
-        id: device.id.toString(),
-        name: device.name || device.uniqueId || `Appareil ${device.id}`,
-        status, statusColor, timeAgo,
-        speed, odometer, consumption,
-        distance: parseFloat(distance.toFixed(1)),
-        fuel: parseFloat(fuel.toFixed(1)),
-        fuelPercentage,
-        type: device.category || 'Vehicle',
-        device, position,
-      };
-    });
-  }, [filteredDevices, positions, speedUnit]);
-
-  // Filter vehicles by tab
   const displayedVehicles = useMemo(() => {
     let v = vehicles;
     if (activeFilter === 'moving') v = v.filter((x) => x.speed > 0);
@@ -737,56 +599,25 @@ const MainPageNew = () => {
   }, [vehicles, activeFilter]);
 
   const totalCount = Object.keys(devices).length;
-
-  // Selected vehicle full data
-  const selectedVehicle = useMemo(
-    () => vehicles.find((v) => v.id === selectedDeviceId?.toString()) || null,
-    [vehicles, selectedDeviceId],
-  );
-
-  const onEventsClick = useCallback(() => { }, []);
+  const selectedVehicle = useMemo(() => vehicles.find((v) => v.id === selectedDeviceId?.toString()) || null, [vehicles, selectedDeviceId]);
   const togglePanel = (key) => setActivePanel((p) => (p === key ? null : key));
-
   const handleToolbarClick = (key) => {
-    if (key === 'refresh') {
-      fetchData();
-      return;
-    }
-    if (['share', 'alerts', 'geofence', 'settings', 'commands'].includes(key)) {
-      togglePanel(key);
-      return;
-    }
+    if (key === 'refresh') { fetchData(); return; }
+    if (['share', 'alerts', 'geofence', 'settings', 'commands'].includes(key)) togglePanel(key);
   };
-
-  const handleFilterClick = (filterId) => {
-    setActiveFilter(filterId);
-  };
-
-  const selectedPosition = filteredPositions.find(
-    (p) => selectedDeviceId && p.deviceId === selectedDeviceId,
-  );
+  const selectedPosition = filteredPositions.find((p) => selectedDeviceId && p.deviceId === selectedDeviceId);
+  const onEventsClick = useCallback(() => { }, []);
 
   return (
     <PageLayout>
       <Box className={classes.mainContainer}>
 
-        {/* ── Full-screen map ─────────────────────────────────────────────── */}
         <Box className={classes.mapContainer}>
-          <MainMap
-            filteredPositions={filteredPositions}
-            selectedPosition={selectedPosition}
-            onEventsClick={onEventsClick}
-          />
-
-          {/* Status card — bottom center */}
+          <MainMap filteredPositions={filteredPositions} selectedPosition={selectedPosition} onEventsClick={onEventsClick} />
           {selectedVehicle && (
             <StatusCardNew
               vehicle={selectedVehicle}
-              batteryVoltage={
-                selectedVehicle.position?.attributes?.battery ||
-                selectedVehicle.position?.attributes?.power ||
-                '12.0'
-              }
+              batteryVoltage={selectedVehicle.position?.attributes?.battery || selectedVehicle.position?.attributes?.power || '12.0'}
               currentTime={selectedVehicle.position?.fixTime || new Date().toISOString()}
               signalStrength={selectedVehicle.position?.attributes?.rssi || 3}
               temperature={selectedVehicle.position?.attributes?.coolantTemp || 0}
@@ -801,16 +632,15 @@ const MainPageNew = () => {
           )}
         </Box>
 
-        {/* ── Left sidebar ────────────────────────────────────────────────── */}
         {!sidebarCollapsed && (
-          <Paper elevation={0} className={classes.sidebar}>
+          <Box className={classes.sidebar}>
             <MainToolbar
               fleetName="Flotte"
               deviceCount={totalCount}
               searchValue={searchValue}
               onSearchChange={setSearchValue}
               activeFilter={activeFilter}
-              onFilterClick={handleFilterClick}
+              onFilterClick={setActiveFilter}
               onToggleCollapse={() => setSidebarCollapsed(true)}
             />
             <Box className={classes.vehicleList}>
@@ -820,9 +650,7 @@ const MainPageNew = () => {
                 </Box>
               ) : displayedVehicles.length === 0 ? (
                 <Box sx={{ textAlign: 'center', pt: 6 }}>
-                  <Typography sx={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-                    Aucun véhicule trouvé
-                  </Typography>
+                  <Typography sx={{ color: '#94a3b8', fontSize: '0.9rem' }}>Aucun véhicule trouvé</Typography>
                 </Box>
               ) : (
                 displayedVehicles.map((vehicle) => (
@@ -832,58 +660,43 @@ const MainPageNew = () => {
                     isSelected={selectedDeviceId?.toString() === vehicle.id}
                     onSelect={() => dispatch(devicesActions.selectId(parseInt(vehicle.id, 10)))}
                     onCenter={(v) => dispatch(devicesActions.selectId(parseInt(v.id, 10)))}
-                    onHistory={(v) => window.location.href = `/replay-new?deviceId=${v.id}`}
+                    onHistory={(v) => { window.location.href = `/replay-new?deviceId=${v.id}`; }}
                     onFollow={(v) => dispatch(devicesActions.selectId(parseInt(v.id, 10)))}
                   />
                 ))
               )}
             </Box>
-          </Paper>
+          </Box>
         )}
 
-        {/* Collapsed sidebar button */}
         {sidebarCollapsed && (
           <Fab className={classes.expandFab} onClick={() => setSidebarCollapsed(false)} disableRipple>
             <ChevronRight fontSize="small" />
           </Fab>
         )}
 
-        {/* ── Right toolbar — hidden when panel is open ──────────────────── */}
-        {!activePanel && <Box className={classes.rightToolbar}>
-          {RIGHT_TOOLBAR.map((item, i) => {
-            if (item === null) return <Box key={`div-${i}`} className={classes.toolbarDivider} />;
-            const { key, Icon, title } = item;
-            const isActive = activePanel === key;
-            return (
-              <Tooltip key={key} title={title} placement="left">
-                <IconButton
-                  size="small"
-                  className={`${classes.toolbarBtn} ${isActive ? classes.toolbarBtnActive : ''}`}
-                  onClick={() => handleToolbarClick(key)}
-                >
-                  <Icon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            );
-          })}
-        </Box>}
+        {!activePanel && (
+          <Box className={classes.rightToolbar}>
+            {RIGHT_TOOLBAR.map((item, i) => {
+              if (item === null) return <Box key={`div-${i}`} className={classes.toolbarDivider} />;
+              const { key, Icon, title } = item;
+              const isActive = activePanel === key;
+              return (
+                <Tooltip key={key} title={title} placement="left">
+                  <IconButton size="small" className={`${classes.toolbarBtn} ${isActive ? classes.toolbarBtnActive : ''}`} onClick={() => handleToolbarClick(key)}>
+                    <Icon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              );
+            })}
+          </Box>
+        )}
 
-        {/* ── Active panel ────────────────────────────────────────────────── */}
-        {activePanel === 'share' && (
-          <SharePanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />
-        )}
-        {activePanel === 'alerts' && (
-          <AlertsPanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />
-        )}
-        {activePanel === 'geofence' && (
-          <GeofencePanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} onSaved={() => { }} />
-        )}
-        {activePanel === 'settings' && (
-          <MapSettingsPanel classes={classes} onClose={() => setActivePanel(null)} />
-        )}
-        {activePanel === 'commands' && (
-          <CommandsPanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />
-        )}
+        {activePanel === 'share' && <SharePanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />}
+        {activePanel === 'alerts' && <AlertsPanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />}
+        {activePanel === 'geofence' && <GeofencePanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} onSaved={() => { }} />}
+        {activePanel === 'settings' && <MapSettingsPanel classes={classes} onClose={() => setActivePanel(null)} />}
+        {activePanel === 'commands' && <CommandsPanel vehicle={selectedVehicle} classes={classes} onClose={() => setActivePanel(null)} />}
 
       </Box>
     </PageLayout>

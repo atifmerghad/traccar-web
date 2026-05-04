@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import {
   Box,
@@ -19,10 +19,11 @@ import {
   VisibilityOff,
   Close as CloseIcon,
   LockOpen as LockOpenIcon,
+  GpsFixed,
+  KeyboardArrowDown,
 } from '@mui/icons-material';
 import ReactCountryFlag from 'react-country-flag';
 import { makeStyles } from 'tss-react/mui';
-import { useTheme } from '@mui/material/styles';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { sessionActions } from '../store';
@@ -32,144 +33,99 @@ import { handleLoginTokenListeners, nativeEnvironment, nativePostMessage } from 
 import { useCatch } from '../reactHelper';
 import Loader from '../common/components/Loader';
 
-const useStyles = makeStyles()((theme) => ({
-  rightPanel: {
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const useStyles = makeStyles()(() => ({
+  root: {
     flex: '0 0 50%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing(6, 8),
-    backgroundColor: theme.palette.background.default,
+    justifyContent: 'center',
+    background: '#080d1a',
     minHeight: '100vh',
-    [theme.breakpoints.down('md')]: {
-      flex: '1 1 100%',
-      padding: theme.spacing(4),
-      minHeight: '100vh',
-    },
+    position: 'relative',
+    padding: '24px',
+    '@media (max-width: 900px)': { flex: '1 1 100%' },
   },
-  formContainer: {
-    width: '100%',
-    maxWidth: '450px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: '2rem',
-    fontWeight: 700,
-    marginBottom: theme.spacing(1),
-    color: theme.palette.text.primary,
-    textAlign: 'center',
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '1.75rem',
-    },
-  },
-  subtitle: {
-    color: theme.palette.text.secondary,
-    marginBottom: `${theme.spacing(5)} !important`,
-    fontSize: '0.95rem',
-    textAlign: 'center',
-    display: 'block',
-    width: '100%',
-    [theme.breakpoints.down('sm')]: {
-      marginBottom: theme.spacing(12),
-    },
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(3),
-    marginTop: 0,
-  },
-  textField: {
-    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.background.paper : 'white',
-    '& .MuiOutlinedInput-root': {
-      borderRadius: theme.spacing(1),
-      '& fieldset': {
-        borderColor: theme.palette.divider,
-      },
-      '&:hover fieldset': {
-        borderColor: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.main,
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: theme.palette.primary.main,
-      },
-    },
-    '& .MuiInputLabel-root': {
-      color: theme.palette.text.secondary,
-      '&.Mui-focused': {
-        color: theme.palette.primary.main,
-      },
-    },
-  },
-  loginButton: {
-    padding: theme.spacing(1.75),
-    fontSize: '1rem',
-    fontWeight: 600,
-    textTransform: 'none',
-    borderRadius: theme.spacing(1),
-    marginTop: theme.spacing(2),
-    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-    color: theme.palette.primary.contrastText || 'white',
-    '&:hover': {
-      background: `linear-gradient(135deg, ${theme.palette.primary.dark || theme.palette.primary.main} 0%, ${theme.palette.secondary.dark || theme.palette.secondary.main} 100%)`,
-    },
-  },
-  footer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: theme.spacing(6),
-    paddingTop: theme.spacing(4),
-    fontSize: '0.875rem',
-    color: theme.palette.text.secondary,
-    [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column',
-      gap: theme.spacing(1),
-      alignItems: 'flex-start',
-      marginTop: theme.spacing(4),
-    },
-  },
-  footerLinks: {
-    display: 'flex',
-    gap: theme.spacing(3),
-  },
-  footerLink: {
-    color: theme.palette.text.secondary,
-    textDecoration: 'none',
-    cursor: 'pointer',
-    '&:hover': {
-      textDecoration: 'underline',
-      color: theme.palette.text.primary,
-    },
-  },
-  options: {
+
+  topBar: {
     position: 'absolute',
-    top: theme.spacing(2),
-    right: theme.spacing(2),
+    top: 20,
+    right: 20,
     display: 'flex',
-    flexDirection: 'row',
-    gap: theme.spacing(1),
+    alignItems: 'center',
+    gap: 8,
   },
-  extraContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing(4),
-    marginTop: theme.spacing(2),
+
+  card: {
+    width: '100%',
+    maxWidth: 440,
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 24,
+    padding: '36px 36px 28px',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+  },
+
+  input: {
+    '& .MuiOutlinedInput-root': {
+      background: 'rgba(255,255,255,0.05)',
+      borderRadius: '12px',
+      color: '#e2e8f0',
+      fontSize: '0.9rem',
+      '& fieldset': { border: '1px solid rgba(255,255,255,0.1)' },
+      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
+    },
+    '& .MuiInputLabel-root': { color: '#64748b', fontSize: '0.9rem' },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
+    '& .MuiFormHelperText-root': { color: '#ef4444', fontSize: '0.75rem' },
+    '& .MuiInputBase-input': { color: '#e2e8f0' },
+  },
+
+  langSelect: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '10px',
+    color: '#94a3b8',
+    fontSize: '0.82rem',
+    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
+    '& .MuiSelect-select': { py: '6px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 },
+    '& .MuiSvgIcon-root': { color: '#475569' },
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
   },
 }));
+
+const DARK_MENU = {
+  PaperProps: {
+    sx: {
+      background: '#0f172a',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '12px',
+      mt: 0.5,
+      '& .MuiMenuItem-root': { color: '#cbd5e1', fontSize: '0.84rem', gap: 1 },
+      '& .MuiMenuItem-root:hover': { background: 'rgba(255,255,255,0.06)' },
+      '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
+    },
+  },
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const LoginPageNew = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const theme = useTheme();
   const t = useTranslation();
 
   const { languages, language, setLanguage } = useLocalization();
-  const languageList = Object.entries(languages).map((values) => ({ code: values[0], country: values[1].country, name: values[1].name }));
+  const languageList = Object.entries(languages).map(([code, val]) => ({
+    code,
+    country: val.country,
+    name: val.name,
+  }));
 
   const [failed, setFailed] = useState(false);
   const [email, setEmail] = usePersistedState('loginEmail', '');
@@ -196,10 +152,8 @@ const LoginPageNew = () => {
           method: 'POST',
           body: new URLSearchParams(`expiration=${expiration}`),
         });
-        if (response.ok) {
-          token = await response.text();
-        }
-      } catch (error) {
+        if (response.ok) token = await response.text();
+      } catch {
         token = '';
       }
       nativePostMessage(`login|${token}`);
@@ -225,7 +179,7 @@ const LoginPageNew = () => {
       } else {
         throw Error(await response.text());
       }
-    } catch (error) {
+    } catch {
       setFailed(true);
       setPassword('');
     }
@@ -256,28 +210,38 @@ const LoginPageNew = () => {
 
   if (openIdForced) {
     handleOpenIdLogin();
-    return (<Loader />);
+    return <Loader />;
   }
 
   return (
-    <Box className={classes.rightPanel}>
-      {/* Options (Language selector and server change) */}
-      <Box className={classes.options}>
+    <Box className={classes.root}>
+
+      {/* Top-right: server change + language */}
+      <Box className={classes.topBar}>
         {nativeEnvironment && changeEnabled && (
           <Tooltip title={t('settingsServer')}>
-            <IconButton onClick={() => navigate('/change-server')}>
-              <LockOpenIcon />
+            <IconButton
+              onClick={() => navigate('/change-server')}
+              sx={{ color: '#64748b', '&:hover': { color: '#a5b4fc' } }}
+              size="small"
+            >
+              <LockOpenIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
         )}
         {languageEnabled && (
-          <FormControl>
-            <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
+          <FormControl size="small">
+            <Select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className={classes.langSelect}
+              IconComponent={KeyboardArrowDown}
+              MenuProps={DARK_MENU}
+              sx={{ minWidth: 110, height: 36 }}
+            >
               {languageList.map((it) => (
                 <MenuItem key={it.code} value={it.code}>
-                  <Box component="span" sx={{ mr: 1 }}>
-                    <ReactCountryFlag countryCode={it.country} svg />
-                  </Box>
+                  <ReactCountryFlag countryCode={it.country} svg style={{ width: 18, height: 14 }} />
                   {it.name}
                 </MenuItem>
               ))}
@@ -286,17 +250,49 @@ const LoginPageNew = () => {
         )}
       </Box>
 
-      <Box className={classes.formContainer}>
-        <Typography className={classes.title}>
-          Connectez-vous à Tracky
-        </Typography>
-        <Typography className={classes.subtitle}>
-          Entrez vos identifiants pour accéder à votre flotte
-        </Typography>
+      {/* Login card */}
+      <Box className={classes.card}>
 
-        <form className={classes.form} onSubmit={handlePasswordLogin}>
+        {/* Card logo */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3.5 }}>
+          <Box
+            sx={{
+              width: 52,
+              height: 52,
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 6px 24px rgba(99,102,241,0.45)',
+              mb: 2,
+            }}
+          >
+            <GpsFixed sx={{ color: '#fff', fontSize: 26 }} />
+          </Box>
+          <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
+            Connectez-vous à{' '}
+            <Box
+              component="span"
+              sx={{
+                background: 'linear-gradient(135deg, #818cf8, #6366f1)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Geo
+            </Box>
+          </Typography>
+          <Typography sx={{ fontSize: '0.85rem', color: '#64748b', mt: 0.6, textAlign: 'center' }}>
+            Entrez vos identifiants pour accéder à votre flotte
+          </Typography>
+        </Box>
+
+        {/* Form */}
+        <Box component="form" onSubmit={handlePasswordLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            className={classes.textField}
+            className={classes.input}
             fullWidth
             required
             error={failed}
@@ -305,13 +301,14 @@ const LoginPageNew = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            helperText={failed && t('loginFailed')}
+            helperText={failed ? t('loginFailed') : ''}
             autoComplete="email"
             autoFocus={!email}
+            size="small"
           />
 
           <TextField
-            className={classes.textField}
+            className={classes.input}
             fullWidth
             required
             error={failed}
@@ -322,25 +319,28 @@ const LoginPageNew = () => {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             autoFocus={!!email}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                    size="small"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            size="small"
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      size="small"
+                      sx={{ color: '#475569', '&:hover': { color: '#94a3b8' } }}
+                    >
+                      {showPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
 
           {codeEnabled && (
             <TextField
-              className={classes.textField}
+              className={classes.input}
               fullWidth
               required
               error={failed}
@@ -349,6 +349,7 @@ const LoginPageNew = () => {
               value={code}
               type="number"
               onChange={(e) => setCode(e.target.value)}
+              size="small"
             />
           )}
 
@@ -356,9 +357,20 @@ const LoginPageNew = () => {
             type="submit"
             variant="contained"
             fullWidth
-            className={classes.loginButton}
-            size="large"
+            disableElevation
             disabled={!email || !password || (codeEnabled && !code)}
+            sx={{
+              mt: 0.5,
+              height: 44,
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              textTransform: 'none',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+              boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
+              '&:hover': { background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)' },
+              '&.Mui-disabled': { background: 'rgba(99,102,241,0.25)', color: 'rgba(255,255,255,0.4)' },
+            }}
           >
             {t('loginLogin')}
           </Button>
@@ -366,47 +378,64 @@ const LoginPageNew = () => {
           {openIdEnabled && (
             <Button
               onClick={handleOpenIdLogin}
-              variant="contained"
+              variant="outlined"
               fullWidth
-              className={classes.loginButton}
-              size="large"
+              sx={{
+                height: 44,
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                borderRadius: '12px',
+                color: '#94a3b8',
+                borderColor: 'rgba(255,255,255,0.1)',
+                '&:hover': { borderColor: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.04)' },
+              }}
             >
               {t('loginOpenId')}
             </Button>
           )}
 
-          <Box className={classes.extraContainer}>
-            {registrationEnabled && (
-              <Link
-                onClick={() => navigate('/register')}
-                className={classes.footerLink}
-                underline="none"
-                variant="caption"
-              >
-                {t('loginRegister')}
-              </Link>
-            )}
-            {emailEnabled && (
-              <Link
-                onClick={() => navigate('/reset-password')}
-                className={classes.footerLink}
-                underline="none"
-                variant="caption"
-              >
-                {t('loginReset')}
-              </Link>
-            )}
-          </Box>
-        </form>
+          {(registrationEnabled || emailEnabled) && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 0.5 }}>
+              {registrationEnabled && (
+                <Link
+                  onClick={() => navigate('/register')}
+                  underline="none"
+                  sx={{ fontSize: '0.82rem', color: '#64748b', cursor: 'pointer', '&:hover': { color: '#818cf8' } }}
+                >
+                  {t('loginRegister')}
+                </Link>
+              )}
+              {emailEnabled && (
+                <Link
+                  onClick={() => navigate('/reset-password')}
+                  underline="none"
+                  sx={{ fontSize: '0.82rem', color: '#64748b', cursor: 'pointer', '&:hover': { color: '#818cf8' } }}
+                >
+                  {t('loginReset')}
+                </Link>
+              )}
+            </Box>
+          )}
+        </Box>
 
-        {/* Footer */}
-        <Box className={classes.footer}>
-          <Typography variant="body2">© 2025 Tracky</Typography>
-          <Box className={classes.footerLinks}>
-            <Link href="#" className={classes.footerLink}>
-              Privacy Policy
+        {/* Card footer */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mt: 3,
+            pt: 2.5,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <Typography sx={{ fontSize: '0.75rem', color: '#334155' }}>© 2025 Geo</Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Link href="#" underline="none" sx={{ fontSize: '0.75rem', color: '#334155', '&:hover': { color: '#64748b' } }}>
+              Confidentialité
             </Link>
-            <Link href="#" className={classes.footerLink}>
+            <Link href="#" underline="none" sx={{ fontSize: '0.75rem', color: '#334155', '&:hover': { color: '#64748b' } }}>
               Support
             </Link>
           </Box>
@@ -427,4 +456,3 @@ const LoginPageNew = () => {
 };
 
 export default LoginPageNew;
-

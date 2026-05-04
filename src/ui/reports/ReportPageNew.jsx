@@ -1,240 +1,321 @@
 import PageLayout from '../PageLayout';
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import {
   Box, Typography, Button, Select, MenuItem,
-  TextField, Stack, FormControl, InputLabel, IconButton,
+  TextField, Stack, FormControl, InputLabel,
+  IconButton, Autocomplete,
 } from '@mui/material';
 import {
   FileDownload, CalendarToday, ArrowBack, KeyboardArrowDown,
 } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useTranslation } from '../../common/components/LocalizationProvider';
-import { useCatch, useEffectAsync } from '../../reactHelper';
-import { useAttributePreference } from '../../common/util/preferences';
-import { formatDistance, formatSpeed, formatVolume, formatTime, formatNumericHours } from '../../common/util/formatter';
 import dayjs from 'dayjs';
-import SelectField from '../../common/components/SelectField';
-import { makeStyles } from 'tss-react/mui';
 import CarReport from './CarReport';
 import CompleteReport from './CompleteReport';
 import { useNavigate } from 'react-router-dom';
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    width: '100%',
-    flex: 1,
-    boxSizing: 'border-box',
-    padding: theme.spacing(3),
-    backgroundColor: '#f1f5f9',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  filterBar: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    flexWrap: 'wrap',
-    marginBottom: theme.spacing(3),
-  },
-  dropdown: {
-    backgroundColor: '#fff',
+const PAGE_BG = '#080d1a';
+const GLASS = {
+  background: 'rgba(255,255,255,0.05)',
+  backdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '14px',
+};
+
+const DARK_INPUT_SX = {
+  '& .MuiOutlinedInput-root': {
+    background: 'rgba(255,255,255,0.05)',
     borderRadius: '10px',
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #e2e8f0' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { border: '1px solid #cbd5e1' },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: '2px solid #6366f1' },
-    boxShadow: '0px 1px 3px rgba(0,0,0,0.05)',
+    color: '#f1f5f9',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
   },
-  reportTypeSelect: {
-    minWidth: 240,
-  },
-  deviceSelect: {
-    minWidth: 240,
-  },
-  dateField: {
-    backgroundColor: '#fff',
-    borderRadius: '10px',
-    minWidth: 260,
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid #e2e8f0' },
-    '& .MuiOutlinedInput-root': { borderRadius: '10px' },
-  },
-  exportBtn: {
-    borderRadius: '10px',
-    textTransform: 'none',
-    fontWeight: 600,
-    padding: '7px 16px',
-    fontSize: '0.85rem',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#fff',
-    color: '#475569',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    '&:hover': { backgroundColor: '#f8fafc' },
-  },
-}));
+  '& .MuiInputLabel-root': { color: '#94a3b8' },
+  '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
+  '& .MuiSelect-icon': { color: '#94a3b8' },
+};
 
 const REPORT_OPTIONS = [
-  { value: 'complete', label: 'Rapport Complet', sub: "Rapport d'activité complet avec tous les champs" },
-  { value: 'consumption', label: 'Rapport de Consommation', sub: 'Consommation de carburant pendant les mouvements' },
-  { value: 'stops', label: 'Stationnements', sub: 'Activités de stationnement du véhicule' },
-  { value: 'distance', label: 'Rapport de Distance', sub: 'Distance parcourue sur la période' },
-  { value: 'temperature', label: 'Rapport de Température', sub: 'Surveillance de température position par position' },
-  { value: 'summary', label: 'Rapport Global de Véhicule', sub: 'Rapport Global de Véhicule' },
+  { value: 'complete', label: 'Rapport Complet', sub: "Activité complète avec tous les champs" },
+  { value: 'summary', label: 'Rapport Global', sub: 'Résumé global du véhicule' },
+  { value: 'consumption', label: 'Consommation', sub: 'Carburant pendant les mouvements' },
+  { value: 'stops', label: 'Stationnements', sub: 'Activités de stationnement' },
+  { value: 'distance', label: 'Distance', sub: 'Distance parcourue sur la période' },
+  { value: 'temperature', label: 'Température', sub: 'Surveillance position par position' },
 ];
 
+const PERIOD_OPTIONS = [
+  { value: 'today', label: "Aujourd'hui" },
+  { value: 'yesterday', label: 'Hier' },
+  { value: 'thisWeek', label: 'Cette semaine' },
+  { value: 'previousWeek', label: 'Semaine dernière' },
+  { value: 'thisMonth', label: 'Ce mois-ci' },
+  { value: 'previousMonth', label: 'Mois dernier' },
+  { value: 'custom', label: 'Personnalisé' },
+];
+
+const getDateRange = (period, customFrom, customTo) => {
+  let selectedFrom, selectedTo;
+  switch (period) {
+    case 'today': selectedFrom = dayjs().startOf('day'); selectedTo = dayjs().endOf('day'); break;
+    case 'yesterday': selectedFrom = dayjs().subtract(1, 'day').startOf('day'); selectedTo = dayjs().subtract(1, 'day').endOf('day'); break;
+    case 'thisWeek': selectedFrom = dayjs().startOf('week'); selectedTo = dayjs().endOf('week'); break;
+    case 'previousWeek': selectedFrom = dayjs().subtract(1, 'week').startOf('week'); selectedTo = dayjs().subtract(1, 'week').endOf('week'); break;
+    case 'thisMonth': selectedFrom = dayjs().startOf('month'); selectedTo = dayjs().endOf('month'); break;
+    case 'previousMonth': selectedFrom = dayjs().subtract(1, 'month').startOf('month'); selectedTo = dayjs().subtract(1, 'month').endOf('month'); break;
+    default: selectedFrom = dayjs(customFrom); selectedTo = dayjs(customTo); break;
+  }
+  if (!selectedFrom?.isValid() || !selectedTo?.isValid()) {
+    return { from: dayjs().startOf('day').toISOString(), to: dayjs().endOf('day').toISOString() };
+  }
+  return { from: selectedFrom.toISOString(), to: selectedTo.toISOString() };
+};
+
 const ReportPageNew = () => {
-  const { classes } = useStyles();
   const t = useTranslation();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const devices = useSelector((state) => state.devices.items);
+  const storeDeviceId = useSelector((state) => state.devices.selectedId);
 
   const [reportType, setReportType] = useState('complete');
-  const [loading, setLoading] = useState(false);
+  const [deviceId, setDeviceId] = useState(storeDeviceId || '');
+  const [period, setPeriod] = useState('today');
+  const [customFrom, setCustomFrom] = useState(dayjs().startOf('day').format('YYYY-MM-DDTHH:mm'));
+  const [customTo, setCustomTo] = useState(dayjs().endOf('day').format('YYYY-MM-DDTHH:mm'));
 
-  const devices = useSelector((state) => state.devices.items);
-  const deviceId = useSelector((state) => state.devices.selectedId);
-  const period = useSelector((state) => state.reports?.period || 'today');
-  const from = useSelector((state) => state.reports?.from || '');
-  const to = useSelector((state) => state.reports?.to || '');
+  const dateRange = getDateRange(period, customFrom, customTo);
+  const dateLabel = `${dayjs(dateRange.from).format('DD MMM YYYY, HH:mm')} — ${dayjs(dateRange.to).format('DD MMM YYYY, HH:mm')}`;
 
-  const getDateRange = () => {
-    let selectedFrom, selectedTo;
-    switch (period) {
-      case 'today': selectedFrom = dayjs().startOf('day'); selectedTo = dayjs().endOf('day'); break;
-      case 'yesterday': selectedFrom = dayjs().subtract(1, 'day').startOf('day'); selectedTo = dayjs().subtract(1, 'day').endOf('day'); break;
-      case 'thisWeek': selectedFrom = dayjs().startOf('week'); selectedTo = dayjs().endOf('week'); break;
-      case 'previousWeek': selectedFrom = dayjs().subtract(1, 'week').startOf('week'); selectedTo = dayjs().subtract(1, 'week').endOf('week'); break;
-      case 'thisMonth': selectedFrom = dayjs().startOf('month'); selectedTo = dayjs().endOf('month'); break;
-      case 'previousMonth': selectedFrom = dayjs().subtract(1, 'month').startOf('month'); selectedTo = dayjs().subtract(1, 'month').endOf('month'); break;
-      default: selectedFrom = dayjs(from, 'YYYY-MM-DDTHH:mm'); selectedTo = dayjs(to, 'YYYY-MM-DDTHH:mm'); break;
-    }
-    if (!selectedFrom?.isValid() || !selectedTo?.isValid()) {
-      return { from: dayjs().startOf('day').toISOString(), to: dayjs().endOf('day').toISOString() };
-    }
-    return { from: selectedFrom.toISOString(), to: selectedTo.toISOString() };
+  const sortedDevices = Object.values(devices).sort((a, b) => a.name.localeCompare(b.name));
+  const selectedDevice = deviceId ? devices[deviceId] : null;
+
+  const handleExportExcel = () => {
+    if (!deviceId) return;
+    const query = new URLSearchParams({ deviceId, from: dateRange.from, to: dateRange.to });
+    window.location.assign(`/api/reports/trips/xlsx?${query.toString()}`);
   };
 
-  const selectedLabel = REPORT_OPTIONS.find((o) => o.value === reportType)?.label || 'Rapport Complet';
-  const dateRange = getDateRange();
-  const dateLabel = `${dayjs(dateRange.from).format('MMM DD, YYYY HH:mm')} - ${dayjs(dateRange.to).format('MMM DD, YYYY HH:mm')}`;
+  const childProps = { deviceId, period, customFrom, customTo };
 
   return (
     <PageLayout>
-      <Box className={classes.root}>
-
-        {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{
+        width: '100%', flex: 1, boxSizing: 'border-box',
+        padding: 3, background: PAGE_BG,
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      }}>
+        {/* ── Header ── */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <IconButton onClick={() => navigate(-1)} sx={{ bgcolor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderRadius: '8px' }}>
+            <IconButton
+              onClick={() => navigate(-1)}
+              sx={{
+                ...GLASS, borderRadius: '10px', color: '#94a3b8',
+                '&:hover': { background: 'rgba(255,255,255,0.1)', color: '#f1f5f9' },
+              }}
+            >
               <ArrowBack fontSize="small" />
             </IconButton>
             <Box>
-              <Typography sx={{ fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>Rapports</Typography>
-              <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>Analyses et informations sur votre flotte</Typography>
+              <Typography sx={{ fontSize: '1.2rem', fontWeight: 800, color: '#f1f5f9' }}>Rapports</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: '#475569' }}>Analyses et informations sur votre flotte</Typography>
             </Box>
           </Box>
+
           <Stack direction="row" spacing={1.5}>
             <Button
-              className={classes.exportBtn}
+              size="small"
               startIcon={<FileDownload sx={{ fontSize: 16 }} />}
-              endIcon={<KeyboardArrowDown sx={{ fontSize: 16 }} />}
-              onClick={() => {
-                const { from: f, to: t2 } = getDateRange();
-                const query = new URLSearchParams({ deviceId, from: f, to: t2 });
-                window.location.assign(`/api/reports/trips/xlsx?${query.toString()}`);
-              }}
+              onClick={handleExportExcel}
               disabled={!deviceId}
+              sx={{
+                ...GLASS, textTransform: 'none', fontWeight: 600,
+                fontSize: '0.82rem', color: '#94a3b8', px: 2, py: 0.75,
+                '&:hover': { background: 'rgba(255,255,255,0.09)', color: '#f1f5f9' },
+                '&.Mui-disabled': { opacity: 0.4 },
+              }}
             >
-              Exporter Excel
+              Excel
             </Button>
             <Button
-              className={classes.exportBtn}
+              size="small"
               startIcon={<FileDownload sx={{ fontSize: 16 }} />}
-              endIcon={<KeyboardArrowDown sx={{ fontSize: 16 }} />}
-              sx={{ color: '#6366f1 !important', borderColor: '#e0e7ff !important', bgcolor: '#f5f3ff !important' }}
+              sx={{
+                background: 'rgba(99,102,241,0.15)',
+                border: '1px solid rgba(99,102,241,0.3)',
+                borderRadius: '10px', textTransform: 'none',
+                fontWeight: 600, fontSize: '0.82rem', color: '#818cf8',
+                px: 2, py: 0.75,
+                '&:hover': { background: 'rgba(99,102,241,0.25)' },
+              }}
             >
-              Exporter PDF
+              PDF
             </Button>
           </Stack>
         </Box>
 
-        {/* Filter Bar */}
-        <Box className={classes.filterBar}>
-          {/* Report Type */}
-          <Select
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-            size="small"
-            className={`${classes.dropdown} ${classes.reportTypeSelect}`}
-            IconComponent={KeyboardArrowDown}
-            renderValue={() => selectedLabel}
-            sx={{ minWidth: 240 }}
-          >
-            {REPORT_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value} sx={{ py: 1.5 }}>
-                <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: reportType === opt.value ? '#6366f1' : '#1e293b' }}>
-                    {opt.label}
-                  </Typography>
-                  <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', mt: 0.25 }}>{opt.sub}</Typography>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
+        {/* ── Filter bar ── */}
+        <Box sx={{
+          ...GLASS, p: 2, mb: 3,
+          display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap',
+        }}>
+          {/* Report type */}
+          <FormControl size="small" sx={{ minWidth: 220, ...DARK_INPUT_SX }}>
+            <InputLabel>Type de rapport</InputLabel>
+            <Select
+              value={reportType}
+              label="Type de rapport"
+              onChange={(e) => setReportType(e.target.value)}
+              IconComponent={KeyboardArrowDown}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+                    '& .MuiMenuItem-root': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: '#f1f5f9' }, '&.Mui-selected': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
+                  },
+                },
+              }}
+            >
+              {REPORT_OPTIONS.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value} sx={{ py: 1.25 }}>
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{opt.label}</Typography>
+                    <Typography sx={{ fontSize: '0.73rem', color: '#475569', mt: 0.2 }}>{opt.sub}</Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          {/* Device Select */}
-          <Box sx={{ minWidth: 240 }}>
-            <SelectField
-              label={t('reportDevice')}
-              data={Object.values(devices).sort((a, b) => a.name.localeCompare(b.name))}
-              value={deviceId}
-              fullWidth
-            />
-          </Box>
+          {/* Device */}
+          <Autocomplete
+            size="small"
+            options={sortedDevices}
+            getOptionLabel={(d) => d.name || ''}
+            value={selectedDevice || null}
+            onChange={(_, v) => setDeviceId(v?.id || '')}
+            sx={{ minWidth: 220 }}
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
+                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+                  '& .MuiAutocomplete-option': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' }, '&[aria-selected="true"]': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
+                },
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Véhicule"
+                sx={DARK_INPUT_SX}
+              />
+            )}
+          />
 
           {/* Period */}
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl size="small" sx={{ minWidth: 180, ...DARK_INPUT_SX }}>
             <InputLabel>{t('reportPeriod')}</InputLabel>
             <Select
               value={period}
               label={t('reportPeriod')}
-              className={classes.dropdown}
+              onChange={(e) => setPeriod(e.target.value)}
+              IconComponent={KeyboardArrowDown}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+                    '& .MuiMenuItem-root': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: '#f1f5f9' }, '&.Mui-selected': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
+                  },
+                },
+              }}
             >
-              <MenuItem value="today">{t('reportToday')}</MenuItem>
-              <MenuItem value="yesterday">{t('reportYesterday')}</MenuItem>
-              <MenuItem value="thisWeek">{t('reportThisWeek')}</MenuItem>
-              <MenuItem value="previousWeek">{t('reportPreviousWeek')}</MenuItem>
-              <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
-              <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem>
-              <MenuItem value="custom">{t('reportCustom')}</MenuItem>
+              {PERIOD_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+              ))}
             </Select>
           </FormControl>
 
-          {/* Date display / custom pickers */}
+          {/* Date range display or custom pickers */}
           {period !== 'custom' ? (
             <Box sx={{
               display: 'flex', alignItems: 'center', gap: 1,
-              bgcolor: '#fff', borderRadius: '10px', px: 2, py: '7px',
-              border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              minWidth: 280,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '10px', px: 2, py: '7px', minWidth: 260,
             }}>
-              <CalendarToday sx={{ fontSize: 15, color: '#94a3b8' }} />
-              <Typography sx={{ fontSize: '0.82rem', color: '#475569', fontWeight: 500 }}>{dateLabel}</Typography>
+              <CalendarToday sx={{ fontSize: 14, color: '#475569' }} />
+              <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{dateLabel}</Typography>
             </Box>
           ) : (
             <>
-              <TextField size="small" type="datetime-local" label={t('reportFrom')} value={from} className={classes.dateField} />
-              <TextField size="small" type="datetime-local" label={t('reportTo')} value={to} className={classes.dateField} />
+              <TextField
+                size="small"
+                type="datetime-local"
+                label={t('reportFrom')}
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                sx={{ minWidth: 240, ...DARK_INPUT_SX }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <TextField
+                size="small"
+                type="datetime-local"
+                label={t('reportTo')}
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                sx={{ minWidth: 240, ...DARK_INPUT_SX }}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
             </>
           )}
         </Box>
 
-        {/* Report content */}
-        {reportType === 'summary' && <CarReport />}
-        {reportType === 'complete' && <CompleteReport />}
+        {/* ── Report type pills ── */}
+        <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
+          {REPORT_OPTIONS.map((opt) => (
+            <Box
+              key={opt.value}
+              onClick={() => setReportType(opt.value)}
+              sx={{
+                px: 2, py: 0.75, borderRadius: '10px', cursor: 'pointer',
+                fontSize: '0.82rem', fontWeight: 600,
+                transition: 'all 0.15s ease',
+                ...(reportType === opt.value
+                  ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#818cf8' }
+                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#475569', '&:hover': { border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8' } }
+                ),
+              }}
+            >
+              {opt.label}
+            </Box>
+          ))}
+        </Stack>
+
+        {/* ── Report content ── */}
+        {reportType === 'summary' && <CarReport {...childProps} />}
+        {reportType === 'complete' && <CompleteReport {...childProps} />}
         {reportType !== 'summary' && reportType !== 'complete' && (
-          <Box sx={{ p: 6, textAlign: 'center', bgcolor: '#fff', borderRadius: 3 }}>
-            <Typography color="textSecondary" sx={{ fontWeight: 600 }}>
-              Rapport "{REPORT_OPTIONS.find((o) => o.value === reportType)?.label}" — bientôt disponible
+          <Box sx={{
+            ...GLASS, p: 8, textAlign: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+          }}>
+            <Box sx={{
+              width: 64, height: 64, borderRadius: '18px',
+              background: 'rgba(99,102,241,0.12)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', mb: 1,
+            }}>
+              <CalendarToday sx={{ fontSize: 28, color: '#6366f1' }} />
+            </Box>
+            <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '1rem' }}>
+              {REPORT_OPTIONS.find((o) => o.value === reportType)?.label}
+            </Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: '#475569' }}>
+              Ce rapport sera disponible prochainement.
             </Typography>
           </Box>
         )}
