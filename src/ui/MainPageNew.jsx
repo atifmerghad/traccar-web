@@ -832,7 +832,7 @@ const MainPageNew = () => {
                     isSelected={selectedDeviceId?.toString() === vehicle.id}
                     onSelect={() => dispatch(devicesActions.selectId(parseInt(vehicle.id, 10)))}
                     onCenter={(v) => dispatch(devicesActions.selectId(parseInt(v.id, 10)))}
-                    onHistory={(v) => window.location.href = `/replay?deviceId=${v.id}`}
+                    onHistory={(v) => window.location.href = `/replay-new?deviceId=${v.id}`}
                     onFollow={(v) => dispatch(devicesActions.selectId(parseInt(v.id, 10)))}
                   />
                 ))

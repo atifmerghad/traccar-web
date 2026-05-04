@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   Box, IconButton, Typography, useMediaQuery, useTheme, Tooltip,
 } from '@mui/material';
@@ -13,53 +13,55 @@ import { useDispatch, useSelector } from 'react-redux';
 import { sessionActions } from '../store';
 import { nativePostMessage } from '../common/components/NativeInterface';
 
-// Only static styles — NO pseudo-selectors (&:hover, & .Mui...) anywhere
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()(() => ({
   root: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: theme.palette.grey[100] || theme.palette.background.default,
+    background: '#080d1a',
     overflow: 'hidden',
   },
   sidebar: {
     width: 64,
-    backgroundColor: theme.palette.primary.dark || theme.palette.grey[800],
+    background: 'rgba(8, 13, 26, 0.97)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRight: '1px solid rgba(255,255,255,0.06)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    gap: theme.spacing(2),
+    paddingTop: 16,
+    paddingBottom: 16,
     zIndex: 10,
     flexShrink: 0,
   },
   logo: {
     width: 40,
     height: 40,
-    backgroundColor: theme.palette.primary.main || theme.palette.grey[700],
+    background: 'rgba(99,102,241,0.15)',
+    border: '1px solid rgba(99,102,241,0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.spacing(1),
-    marginBottom: theme.spacing(1),
+    borderRadius: 10,
+    marginBottom: 12,
     cursor: 'pointer',
-  },
-  logoText: {
-    color: theme.palette.common.white,
-    fontSize: 24,
-    fontWeight: 'bold',
-    lineHeight: 1,
+    flexShrink: 0,
+    transition: 'transform 0.2s ease, background 0.2s ease',
   },
   navStack: {
     display: 'flex',
     flexDirection: 'column',
-    gap: theme.spacing(1.5),
+    gap: 4,
     alignItems: 'center',
     width: '100%',
+    padding: '0 10px',
+    flex: 1,
   },
-  iconButton: {
-    borderRadius: '12px',
-    padding: '12px',
+  navBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    padding: 0,
   },
   content: {
     flex: 1,
@@ -67,40 +69,41 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: 'column',
     overflowY: 'auto',
     overflowX: 'hidden',
+    background: '#080d1a',
   },
   spacer: { flexGrow: 1 },
   bottomStack: {
     display: 'flex',
     flexDirection: 'column',
-    gap: theme.spacing(1),
+    gap: 4,
     alignItems: 'center',
     width: '100%',
+    padding: '0 10px',
   },
 }));
 
-// Nav item — hover handled via React state, not CSS pseudo-selectors
 const NavItem = ({ icon, label, active, onClick }) => {
   const { classes } = useStyles();
-  const [hovered, setHovered] = React.useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  const bg = active
+    ? 'rgba(99,102,241,0.18)'
+    : hovered
+      ? 'rgba(255,255,255,0.07)'
+      : 'transparent';
+
+  const iconColor = active ? '#818cf8' : hovered ? '#94a3b8' : '#475569';
 
   return (
     <Tooltip title={label} placement="right">
       <IconButton
-        className={classes.iconButton}
+        className={classes.navBtn}
         onClick={onClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        style={{
-          color: '#ffffff',
-          backgroundColor: active
-            ? '#334155'
-            : hovered
-              ? 'rgba(255,255,255,0.1)'
-              : 'transparent',
-          transition: 'background-color 0.2s ease',
-        }}
+        style={{ backgroundColor: bg, transition: 'background 0.2s ease' }}
       >
-        {React.cloneElement(icon, { style: { fontSize: 24, color: '#ffffff' } })}
+        {icon({ style: { fontSize: 22, color: iconColor, transition: 'color 0.2s ease' } })}
       </IconButton>
     </Tooltip>
   );
@@ -114,22 +117,20 @@ const PageLayout = ({ children }) => {
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const dispatch = useDispatch();
   const user = useSelector((state) => state.session.user);
-  const [logoHovered, setLogoHovered] = React.useState(false);
+  const [logoHovered, setLogoHovered] = useState(false);
 
   const menuItems = [
-    { icon: <HomeOutlined />, path: '/dashboard', label: 'Dashboard' },
-    { icon: <MapOutlined />, path: '/map', label: 'Carte' },
-    { icon: <AssessmentOutlined />, path: '/graph-page', label: 'Statistiques' },
-    { icon: <BarChartOutlined />, path: '/reports-page', label: 'Rapports' },
-    { icon: <BuildOutlined />, path: '/maintenances-page', label: 'Maintenance' },
-    { icon: <PersonOutlined />, path: '/users-new', label: 'Utilisateurs' },
-    { icon: <SettingsOutlined />, path: '/settings-page', label: 'Paramètres' },
+    { icon: (s) => <HomeOutlined {...s} />, path: '/dashboard', label: 'Dashboard' },
+    { icon: (s) => <MapOutlined {...s} />, path: '/map', label: 'Carte' },
+    { icon: (s) => <AssessmentOutlined {...s} />, path: '/graph-page', label: 'Statistiques' },
+    { icon: (s) => <BarChartOutlined {...s} />, path: '/reports-page', label: 'Rapports' },
+    { icon: (s) => <BuildOutlined {...s} />, path: '/maintenances-page', label: 'Maintenance' },
+    { icon: (s) => <PersonOutlined {...s} />, path: '/users-new', label: 'Utilisateurs' },
+    { icon: (s) => <SettingsOutlined {...s} />, path: '/settings-page', label: 'Paramètres' },
   ];
 
   const isActive = (path) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/' || location.pathname === '/dashboard';
-    }
+    if (path === '/dashboard') return location.pathname === '/' || location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
   };
 
@@ -163,21 +164,18 @@ const PageLayout = ({ children }) => {
 
   const SidebarContent = (
     <Box className={classes.sidebar}>
-      {/* Logo */}
       <Box
         className={classes.logo}
         onClick={() => navigate('/dashboard')}
-        onMouseEnter={() => setLogoHovered(true)}
-        onMouseLeave={() => setLogoHovered(false)}
-        style={{
-          transform: logoHovered ? 'scale(1.05)' : 'scale(1)',
-          transition: 'transform 0.2s ease',
-        }}
+        onMouseEnter={() => {}}
+        onMouseLeave={() => {}}
+        style={{ transform: logoHovered ? 'scale(1.08)' : 'scale(1)' }}
+        onMouseOver={() => setLogoHovered(true)}
+        onMouseOut={() => setLogoHovered(false)}
       >
-        <Typography className={classes.logoText}>T</Typography>
+        <Typography style={{ color: '#818cf8', fontSize: 22, fontWeight: 900, lineHeight: 1 }}>T</Typography>
       </Box>
 
-      {/* Main nav */}
       <Box className={classes.navStack}>
         {menuItems.map((item) => (
           <NavItem
@@ -192,16 +190,15 @@ const PageLayout = ({ children }) => {
 
       <Box className={classes.spacer} />
 
-      {/* Bottom actions */}
       <Box className={classes.bottomStack}>
         <NavItem
-          icon={<NotificationsNoneOutlined />}
+          icon={(s) => <NotificationsNoneOutlined {...s} />}
           label="Notifications"
           active={isActive('/notifications')}
           onClick={() => navigate('/notifications')}
         />
         <NavItem
-          icon={<LogoutOutlined />}
+          icon={(s) => <LogoutOutlined {...s} />}
           label="Déconnexion"
           active={false}
           onClick={handleLogout}

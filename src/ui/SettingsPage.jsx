@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Paper, TextField, Button,
-  MenuItem, Select, FormControl, Stack, IconButton, Avatar,
-  Snackbar, Alert // Added imports here
+  Box, Typography, TextField, Button, MenuItem, Select,
+  FormControl, Stack, IconButton, Snackbar, Alert, CircularProgress,
+  Avatar, Paper, Divider
 } from '@mui/material';
 import {
   ArrowBack, Check, Language, EmailOutlined, PhoneOutlined,
-  PersonOutlined, DescriptionOutlined, TranslateOutlined, InfoOutlined
+  PersonOutlined, DescriptionOutlined, TranslateOutlined, InfoOutlined,
+  DirectionsCarOutlined
 } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
 import { useNavigate } from 'react-router-dom';
@@ -22,31 +23,26 @@ const useStyles = makeStyles()((theme) => ({
     flex: 1,
     boxSizing: 'border-box',
     padding: theme.spacing(3),
-    backgroundColor: '#f1f5f9',
+    background: '#080d1a',
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
   },
-
-  // Section cards — same as dashboard
   sectionCard: {
     borderRadius: '16px',
-    backgroundColor: '#fff',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    background: 'rgba(255,255,255,0.05)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.08)',
     overflow: 'hidden',
     marginBottom: theme.spacing(3),
   },
-
   cardHeader: {
-    padding: '20px 24px',
+    padding: '18px 24px',
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
   },
-  headerBlue: { background: 'linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%)' },
-  headerGreen: { background: 'linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%)' },
-  headerYellow: { background: 'linear-gradient(90deg, #fffbeb 0%, #ffffff 100%)' },
-
   iconBox: {
     width: 40,
     height: 40,
@@ -56,64 +52,40 @@ const useStyles = makeStyles()((theme) => ({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  cardTitle: { fontWeight: 700, fontSize: '1rem', color: '#1e293b' },
-  cardSubtitle: { color: '#64748b', fontSize: '0.8rem' },
+  cardTitle: { fontWeight: 700, fontSize: '0.95rem', color: '#f1f5f9' },
+  cardSubtitle: { color: '#475569', fontSize: '0.78rem' },
   cardContent: { padding: '24px' },
-
-  // Form
   label: {
-    fontSize: '0.85rem',
+    fontSize: '0.82rem',
     fontWeight: 600,
-    color: '#475569',
+    color: '#94a3b8',
     marginBottom: '6px',
     display: 'block',
   },
-  textField: {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '8px',
-      backgroundColor: '#fff',
-      '& fieldset': { borderColor: '#e2e8f0' },
-      '&:hover fieldset': { borderColor: '#cbd5e1' },
-    },
-  },
-
-  // Language buttons
-  langButton: {
-    borderRadius: '8px',
-    textTransform: 'none',
-    padding: '8px 16px',
-    fontSize: '0.8rem',
-    fontWeight: 500,
-    border: '1px solid #e2e8f0',
-    color: '#64748b',
-    '&.selected': {
-      backgroundColor: '#6366f1',
-      color: '#fff',
-      borderColor: '#6366f1',
-    },
-  },
-
-  // Account detail rows
   detailRow: {
     display: 'flex',
     alignItems: 'center',
     padding: '10px 0',
     gap: '12px',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
     '&:last-child': { borderBottom: 'none' },
   },
-  detailLabel: { color: '#64748b', fontSize: '0.85rem', width: '80px', flexShrink: 0 },
-  detailValue: { color: '#1e293b', fontSize: '0.85rem', fontWeight: 600 },
-
-  saveBtn: {
-    backgroundColor: '#6366f1',
-    borderRadius: '8px',
-    textTransform: 'none',
-    padding: '10px 24px',
-    fontWeight: 600,
-    '&:hover': { backgroundColor: '#4f46e5' },
-  },
+  detailLabel: { color: '#475569', fontSize: '0.82rem', width: '80px', flexShrink: 0 },
+  detailValue: { color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 600, wordBreak: 'break-all' },
 }));
+
+const darkInput = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '10px',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#f1f5f9',
+    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+    '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+  },
+  '& .MuiInputLabel-root': { color: '#475569' },
+  '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
+};
 
 const SettingsPage = () => {
   const { classes } = useStyles();
@@ -123,18 +95,15 @@ const SettingsPage = () => {
   const { language, setLanguage } = useLocalization();
   const user = useSelector((state) => state.session.user);
 
-  // --- Snackbar State ---
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success', // 'success' | 'error' | 'info' | 'warning'
-  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    if (language === 'en' || language === 'fr' || language === 'ar') return language;
-    return 'fr';
-  });
+  // --- VEHICLE STATE ---
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [vehicleData, setVehicleData] = useState({ name: '', uniqueId: '', model: '' });
+  const [loadingDevices, setLoadingDevices] = useState(false);
 
+  // --- PROFILE STATE[cite: 5] ---
   const nameParts = user?.name?.split(' ') || [];
   const [profileData, setProfileData] = useState({
     firstName: nameParts[0] || '',
@@ -142,254 +111,298 @@ const SettingsPage = () => {
     phone: user?.phone || '',
   });
 
-  useEffect(() => {
-    const parts = user?.name?.split(' ') || [];
-    setProfileData({
-      firstName: parts[0] || '',
-      lastName: parts.slice(1).join(' ') || '',
-      phone: user?.phone || '',
-    });
-  }, [user]);
+  const [selectedLanguage, setSelectedLanguage] = useState(language || 'fr');
 
+  // Fetch Devices for the Selection Dropdown
   useEffect(() => {
-    if (language === 'en' || language === 'fr' || language === 'ar') {
-      setSelectedLanguage(language);
+    const fetchDevices = async () => {
+      setLoadingDevices(true);
+      try {
+        const response = await fetch('/api/devices');
+        if (response.ok) {
+          setDevices(await response.json());
+        }
+      } catch (e) {
+        console.error("Failed to fetch devices", e);
+      } finally {
+        setLoadingDevices(false);
+      }
+    };
+    fetchDevices();
+  }, []);
+
+  const handleDeviceSelect = (id) => {
+    setSelectedDeviceId(id);
+    const device = devices.find(d => d.id === id);
+    if (device) {
+      setVehicleData({
+        name: device.name || '',
+        uniqueId: device.uniqueId || '',
+        model: device.model || '',
+      });
     }
-  }, [language]);
+  };
+
+  const handleVehicleUpdate = useCatch(async () => {
+    const device = devices.find(d => d.id === selectedDeviceId);
+    const updatedDevice = { ...device, ...vehicleData };
+
+    const response = await fetch(`/api/devices/${selectedDeviceId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedDevice),
+    });
+
+    if (response.ok) {
+      setDevices(devices.map(d => d.id === selectedDeviceId ? updatedDevice : d));
+      setSnackbar({ open: true, message: t('sharedSaved'), severity: 'success' });
+    } else {
+      setSnackbar({ open: true, message: t('sharedError'), severity: 'error' });
+    }
+  });
+
+  const handleProfileUpdate = useCatch(async () => {
+    const updatedUser = {
+      ...user,
+      name: `${profileData.firstName} ${profileData.lastName}`.trim(),
+      phone: profileData.phone,
+    };
+    const response = await fetch(`/api/users/${user.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedUser),
+    });
+    if (response.ok) {
+      dispatch(sessionActions.updateUser(await response.json()));
+      setSnackbar({ open: true, message: t('sharedSaved'), severity: 'success' });
+    }
+  });
 
   const handleLanguageChange = (langCode) => {
     setSelectedLanguage(langCode);
     setLanguage(langCode);
   };
 
-  // --- Close handler for Snackbar ---
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
+  const LANGUAGES = [
+    { code: 'en', label: '🇺🇸 English' },
+    { code: 'fr', label: '🇫🇷 Français' },
+    { code: 'ar', label: '🇸🇦 العربية' },
+  ];
 
-  const handleProfileUpdate = useCatch(async () => {
-    const updatedName = `${profileData.firstName} ${profileData.lastName}`.trim();
-    const updatedUser = { ...user, name: updatedName, phone: profileData.phone };
-    const response = await fetch(`/api/users/${user.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedUser),
-    });
-
-    if (response.ok) {
-      dispatch(sessionActions.updateUser(await response.json()));
-      // Trigger success snackbar
-      setSnackbar({
-        open: true,
-        message: t('sharedSaved') || 'Profile updated successfully!',
-        severity: 'success'
-      });
-    } else {
-      // Trigger error snackbar
-      setSnackbar({
-        open: true,
-        message: t('sharedError') || 'Failed to update profile.',
-        severity: 'error'
-      });
-      throw Error(await response.text());
-    }
-  });
+  const accountDetails = [
+    { icon: <EmailOutlined />, label: t('userEmail'), value: user?.email || '' },
+    { icon: <PersonOutlined />, label: t('sharedName'), value: user?.name || '' },
+    { icon: <PhoneOutlined />, label: t('sharedPhone'), value: user?.phone || '-' },
+  ];
 
   return (
     <PageLayout>
       <Box className={classes.root}>
-
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton onClick={() => navigate(-1)} sx={{ mr: 1, bgcolor: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <IconButton
+            onClick={() => navigate(-1)}
+            sx={{ mr: 1.5, color: '#94a3b8', bgcolor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px' }}
+          >
             <ArrowBack />
           </IconButton>
           <Box>
-            <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>
-              {t('settingsTitle')}
-            </Typography>
-            <Typography sx={{ color: '#64748b', fontSize: '0.85rem' }}>
-              {t('sharedPreferences')}
-            </Typography>
+            <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#f1f5f9' }}>{t('settingsTitle')}</Typography>
+            <Typography sx={{ color: '#475569', fontSize: '0.82rem' }}>{t('sharedPreferences')}</Typography>
           </Box>
         </Box>
 
-        {/* Two-column layout */}
         <Box sx={{ display: 'flex', gap: 3, width: '100%', alignItems: 'flex-start' }}>
-
-          {/* Left column — 2/3 width */}
+          {/* LEFT COLUMN: VEHICLE & PROFILE[cite: 5] */}
           <Box sx={{ flex: 2, minWidth: 0 }}>
 
-            {/* Vehicle Selection */}
-            <Paper elevation={0} className={classes.sectionCard}>
-              <Box className={`${classes.cardHeader} ${classes.headerBlue}`}>
-                <Box className={classes.iconBox} sx={{ bgcolor: '#e0f2fe' }}>
-                  <DescriptionOutlined sx={{ color: '#0ea5e9' }} />
+            {/* Vehicle Selection & Edit Card */}
+            <Box className={classes.sectionCard}>
+              <Box className={classes.cardHeader}>
+                <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.2)' }}>
+                  <DirectionsCarOutlined sx={{ color: '#0ea5e9', fontSize: 20 }} />
                 </Box>
                 <Box>
                   <Typography className={classes.cardTitle}>{t('deviceEdit')}</Typography>
-                  <Typography className={classes.cardSubtitle}>{t('sharedDescription')}</Typography>
+                  <Typography className={classes.cardSubtitle}>Sélectionner et modifier un véhicule</Typography>
                 </Box>
               </Box>
               <Box className={classes.cardContent}>
-                <Typography className={classes.label}>{t('sharedDevice')}</Typography>
-                <FormControl fullWidth>
-                  <Select displayEmpty value="" className={classes.textField}>
-                    <MenuItem value="" disabled>{t('sharedSearchDevices')}</MenuItem>
-                    <MenuItem value="v1">{t('sharedDevice')} 1</MenuItem>
+                <Typography className={classes.label}>Choisir un véhicule</Typography>
+                <FormControl fullWidth sx={{ mb: selectedDeviceId ? 3 : 0 }}>
+                  <Select
+                    value={selectedDeviceId}
+                    onChange={(e) => handleDeviceSelect(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      background: 'rgba(255,255,255,0.06)',
+                      borderRadius: '10px',
+                      color: '#f1f5f9',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
+                      '& .MuiSvgIcon-root': { color: '#475569' },
+                    }}
+                  >
+                    <MenuItem value="" disabled>{loadingDevices ? <CircularProgress size={20} /> : 'Choisissez un véhicule à modifier...'}</MenuItem>
+                    {devices.map((device) => (
+                      <MenuItem key={device.id} value={device.id}>{device.name}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
-              </Box>
-            </Paper>
 
-            {/* Profile Info */}
-            <Paper elevation={0} className={classes.sectionCard}>
-              <Box className={`${classes.cardHeader} ${classes.headerBlue}`}>
-                <Box className={classes.iconBox} sx={{ bgcolor: '#e0f2fe' }}>
-                  <PersonOutlined sx={{ color: '#0ea5e9' }} />
+                {selectedDeviceId && (
+                  <Stack spacing={3}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography className={classes.label}>Nom du véhicule</Typography>
+                        <TextField
+                          fullWidth
+                          value={vehicleData.name}
+                          onChange={(e) => setVehicleData({ ...vehicleData, name: e.target.value })}
+                          sx={darkInput}
+                        />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography className={classes.label}>Identifiant Unique (IMEI)</Typography>
+                        <TextField
+                          fullWidth
+                          value={vehicleData.uniqueId}
+                          onChange={(e) => setVehicleData({ ...vehicleData, uniqueId: e.target.value })}
+                          sx={darkInput}
+                        />
+                      </Box>
+                    </Box>
+                    <Box>
+                      <Typography className={classes.label}>Modèle</Typography>
+                      <TextField
+                        fullWidth
+                        value={vehicleData.model}
+                        onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
+                        sx={darkInput}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button variant="contained" startIcon={<Check />} onClick={handleVehicleUpdate} sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
+                        Mettre à jour le véhicule
+                      </Button>
+                    </Box>
+                  </Stack>
+                )}
+              </Box>
+            </Box>
+
+            {/* Profile Info Section[cite: 5] */}
+            <Box className={classes.sectionCard}>
+              <Box className={classes.cardHeader}>
+                <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.2)' }}>
+                  <PersonOutlined sx={{ color: '#0ea5e9', fontSize: 20 }} />
                 </Box>
                 <Box>
                   <Typography className={classes.cardTitle}>{t('settingsUser')}</Typography>
-                  <Typography className={classes.cardSubtitle}>{t('sharedPreferences')}</Typography>
+                  <Typography className={classes.cardSubtitle}>Mettez à jour vos informations personnelles</Typography>
                 </Box>
               </Box>
               <Box className={classes.cardContent}>
                 <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography className={classes.label}>{t('sharedName')}</Typography>
-                    <TextField
-                      fullWidth
-                      value={profileData.firstName}
-                      onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                      className={classes.textField}
-                    />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography className={classes.label}>Prénom</Typography>
+                    <TextField fullWidth value={profileData.firstName} onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })} sx={darkInput} />
                   </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography className={classes.label}>{t('sharedName')}</Typography>
-                    <TextField
-                      fullWidth
-                      value={profileData.lastName}
-                      onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                      className={classes.textField}
-                    />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography className={classes.label}>Nom de famille</Typography>
+                    <TextField fullWidth value={profileData.lastName} onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })} sx={darkInput} />
                   </Box>
                 </Box>
                 <Box sx={{ mb: 3 }}>
                   <Typography className={classes.label}>{t('sharedPhone')}</Typography>
-                  <TextField
-                    fullWidth
-                    value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    className={classes.textField}
-                  />
+                  <TextField fullWidth value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} sx={darkInput} />
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<Check />}
-                    className={classes.saveBtn}
-                    onClick={handleProfileUpdate}
-                    disableElevation
-                  >
-                    {t('sharedSave')}
+                  <Button variant="contained" startIcon={<Check />} onClick={handleProfileUpdate} sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
+                    Mettre à jour le profil
                   </Button>
                 </Box>
               </Box>
-            </Paper>
+            </Box>
           </Box>
 
-          {/* Right column — 1/3 width */}
+          {/* RIGHT COLUMN: LANGUAGE & ACCOUNT[cite: 5] */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-
-            {/* Language Preferences */}
-            <Paper elevation={0} className={classes.sectionCard}>
-              <Box className={`${classes.cardHeader} ${classes.headerGreen}`}>
-                <Box className={classes.iconBox} sx={{ bgcolor: '#dcfce7' }}>
-                  <TranslateOutlined sx={{ color: '#22c55e' }} />
+            {/* Language Selection Section[cite: 5] */}
+            <Box className={classes.sectionCard}>
+              <Box className={classes.cardHeader}>
+                <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                  <TranslateOutlined sx={{ color: '#22c55e', fontSize: 20 }} />
                 </Box>
                 <Box>
-                  <Typography className={classes.cardTitle}>{t('sharedPreferences')}</Typography>
-                  <Typography className={classes.cardSubtitle}>{t('sharedPreferences')}</Typography>
+                  <Typography className={classes.cardTitle}>Préférences</Typography>
+                  <Typography className={classes.cardSubtitle}>Personnalisez votre expérience</Typography>
                 </Box>
               </Box>
               <Box className={classes.cardContent}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Language sx={{ fontSize: 18, color: '#64748b' }} />
-                  <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>
-                    {t('sharedPreferences')}
-                  </Typography>
+                  <Language sx={{ fontSize: 17, color: '#475569' }} />
+                  <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#94a3b8' }}>Langue</Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                  {[
-                    { code: 'en', label: '🇺🇸 English' },
-                    { code: 'fr', label: '🇫🇷 Français' },
-                    { code: 'ar', label: '🇸🇦 العربية' },
-                  ].map(({ code, label }) => (
-                    <Button
-                      key={code}
-                      className={`${classes.langButton} ${selectedLanguage === code ? 'selected' : ''}`}
-                      onClick={() => handleLanguageChange(code)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
+                  {LANGUAGES.map(({ code, label }) => {
+                    const selected = selectedLanguage === code;
+                    return (
+                      <Button
+                        key={code}
+                        onClick={() => handleLanguageChange(code)}
+                        sx={{
+                          borderRadius: '8px',
+                          textTransform: 'none',
+                          padding: '6px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          border: `1px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
+                          bgcolor: selected ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
+                          color: selected ? '#818cf8' : '#94a3b8',
+                          '&:hover': { bgcolor: selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.08)' },
+                        }}
+                      >
+                        {label}
+                      </Button>
+                    );
+                  })}
                 </Stack>
-                <Typography sx={{ color: '#94a3b8', fontSize: '0.75rem' }}>
-                  {t('sharedPreferences')}
+                <Typography sx={{ color: '#475569', fontSize: '0.73rem' }}>
+                  Sélectionnez votre langue préférée. Les modifications prendront effet immédiatement.
                 </Typography>
               </Box>
-            </Paper>
+            </Box>
 
-            {/* Account Details */}
-            <Paper elevation={0} className={classes.sectionCard}>
-              <Box className={`${classes.cardHeader} ${classes.headerYellow}`}>
-                <Box className={classes.iconBox} sx={{ bgcolor: '#fef3c7' }}>
-                  <InfoOutlined sx={{ color: '#f59e0b' }} />
+            {/* Account Details Section[cite: 5] */}
+            <Box className={classes.sectionCard}>
+              <Box className={classes.cardHeader}>
+                <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                  <InfoOutlined sx={{ color: '#f59e0b', fontSize: 20 }} />
                 </Box>
                 <Box>
-                  <Typography className={classes.cardTitle}>{t('settingsUser')}</Typography>
-                  <Typography className={classes.cardSubtitle}>{t('settingsUser')}</Typography>
+                  <Typography className={classes.cardTitle}>Compte</Typography>
+                  <Typography className={classes.cardSubtitle}>Détails du compte</Typography>
                 </Box>
               </Box>
               <Box className={classes.cardContent}>
-                {[
-                  { icon: <EmailOutlined />, label: t('userEmail'), value: user?.email || '' },
-                  { icon: <PersonOutlined />, label: t('sharedName'), value: user?.name || '' },
-                  { icon: <PhoneOutlined />, label: t('sharedPhone'), value: user?.phone || '-' },
-                ].map((row, i) => (
+                {accountDetails.map((row, i) => (
                   <Box key={i} className={classes.detailRow}>
-                    <Box sx={{ color: '#94a3b8', display: 'flex', fontSize: 18 }}>{row.icon}</Box>
+                    <Box sx={{ color: '#475569', display: 'flex', fontSize: 18 }}>{row.icon}</Box>
                     <span className={classes.detailLabel}>{row.label}</span>
                     <span className={classes.detailValue}>{row.value}</span>
                   </Box>
                 ))}
               </Box>
-            </Paper>
-
+            </Box>
           </Box>
         </Box>
       </Box>
 
-      {/* --- Snackbar Component Added Here --- */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-          variant="filled"
-        >
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={() => setSnackbar((s) => ({ ...s, open: false }))} severity={snackbar.severity} sx={{ width: '100%', borderRadius: '12px' }} variant="filled">
           {snackbar.message}
         </Alert>
       </Snackbar>
-
     </PageLayout>
   );
 };
