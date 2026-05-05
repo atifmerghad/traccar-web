@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { ArrowBack, ArrowForward, GpsFixed, Speed, Analytics, NotificationsActive } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
 import { keyframes } from '@emotion/react';
@@ -10,144 +11,153 @@ const livePulse = keyframes`
   100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 `;
 
-const useStyles = makeStyles()(() => ({
-  panel: {
-    flex: '0 0 50%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(160deg, #0c1629 0%, #080d1a 45%, #0a1020 100%)',
-    position: 'relative',
-    overflow: 'hidden',
-    minHeight: '100vh',
-    padding: '36px 48px',
-    '@media (max-width: 900px)': { display: 'none' },
-  },
-  grid: {
-    position: 'absolute',
-    inset: 0,
-    backgroundImage:
-      'linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)',
-    backgroundSize: '52px 52px',
-    pointerEvents: 'none',
-  },
-  glowTop: {
-    position: 'absolute',
-    top: '-15%',
-    left: '-15%',
-    width: '70%',
-    height: '70%',
-    background: 'radial-gradient(ellipse, rgba(99,102,241,0.14) 0%, transparent 65%)',
-    pointerEvents: 'none',
-  },
-  glowBottom: {
-    position: 'absolute',
-    bottom: '-15%',
-    right: '-10%',
-    width: '55%',
-    height: '55%',
-    background: 'radial-gradient(ellipse, rgba(34,197,94,0.07) 0%, transparent 65%)',
-    pointerEvents: 'none',
-  },
-  logo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    position: 'relative',
-    zIndex: 1,
-    marginBottom: 48,
-  },
-  logoIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
-    flexShrink: 0,
-  },
-  content: {
-    position: 'relative',
-    zIndex: 1,
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    maxWidth: 520,
-    transition: 'opacity 0.25s ease',
-  },
-  slideTitle: {
-    fontSize: '3.4rem',
-    fontWeight: 800,
-    color: '#f1f5f9',
-    lineHeight: 1.1,
-    marginBottom: 14,
-    letterSpacing: '-0.025em',
-  },
-  tagline: {
-    fontSize: '1.15rem',
-    fontWeight: 500,
-    color: '#94a3b8',
-    marginBottom: 14,
-  },
-  description: {
-    fontSize: '0.92rem',
-    lineHeight: 1.8,
-    color: '#64748b',
-    marginBottom: 40,
-  },
-  featureRow: {
-    display: 'flex',
-    gap: 10,
-    marginBottom: 40,
-  },
-  featureCard: {
-    flex: 1,
-    background: 'rgba(255,255,255,0.04)',
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255,255,255,0.07)',
-    borderRadius: 14,
-    padding: '14px 12px',
-    transition: 'border-color 0.2s',
-    '&:hover': { borderColor: 'rgba(255,255,255,0.14)' },
-  },
-  nav: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    position: 'relative',
-    zIndex: 1,
-  },
-  navBtn: {
-    width: 34,
-    height: 34,
-    color: '#64748b',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '50%',
-    '&:hover': { background: 'rgba(255,255,255,0.06)', color: '#f1f5f9', borderColor: 'rgba(255,255,255,0.2)' },
-  },
-  dot: {
-    height: 6,
-    borderRadius: 3,
-    background: 'rgba(255,255,255,0.15)',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-  },
-  dotActive: {
-    background: '#6366f1',
-    width: '20px !important',
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    background: '#22c55e',
-    flexShrink: 0,
-    animation: `${livePulse} 2s ease-in-out infinite`,
-  },
-}));
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    panel: {
+      flex: '0 0 50%',
+      display: 'flex',
+      flexDirection: 'column',
+      background: isDark
+        ? 'linear-gradient(160deg, #0c1629 0%, #080d1a 45%, #0a1020 100%)'
+        : `linear-gradient(160deg, #e0e7ff 0%, ${theme.palette.background.default} 45%, #f0f4ff 100%)`,
+      position: 'relative',
+      overflow: 'hidden',
+      minHeight: '100vh',
+      padding: '36px 48px',
+      '@media (max-width: 900px)': { display: 'none' },
+    },
+    grid: {
+      position: 'absolute',
+      inset: 0,
+      backgroundImage:
+        'linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)',
+      backgroundSize: '52px 52px',
+      pointerEvents: 'none',
+    },
+    glowTop: {
+      position: 'absolute',
+      top: '-15%',
+      left: '-15%',
+      width: '70%',
+      height: '70%',
+      background: 'radial-gradient(ellipse, rgba(99,102,241,0.14) 0%, transparent 65%)',
+      pointerEvents: 'none',
+    },
+    glowBottom: {
+      position: 'absolute',
+      bottom: '-15%',
+      right: '-10%',
+      width: '55%',
+      height: '55%',
+      background: 'radial-gradient(ellipse, rgba(34,197,94,0.07) 0%, transparent 65%)',
+      pointerEvents: 'none',
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      position: 'relative',
+      zIndex: 1,
+      marginBottom: 48,
+    },
+    logoIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
+      flexShrink: 0,
+    },
+    content: {
+      position: 'relative',
+      zIndex: 1,
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      maxWidth: 520,
+      transition: 'opacity 0.25s ease',
+    },
+    slideTitle: {
+      fontSize: '3.4rem',
+      fontWeight: 800,
+      color: theme.palette.text.primary,
+      lineHeight: 1.1,
+      marginBottom: 14,
+      letterSpacing: '-0.025em',
+    },
+    tagline: {
+      fontSize: '1.15rem',
+      fontWeight: 500,
+      color: theme.palette.text.secondary,
+      marginBottom: 14,
+    },
+    description: {
+      fontSize: '0.92rem',
+      lineHeight: 1.8,
+      color: theme.palette.text.disabled,
+      marginBottom: 40,
+    },
+    featureRow: {
+      display: 'flex',
+      gap: 10,
+      marginBottom: 40,
+    },
+    featureCard: {
+      flex: 1,
+      background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
+      borderRadius: 14,
+      padding: '14px 12px',
+      transition: 'border-color 0.2s',
+      '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.14)' : theme.palette.divider },
+    },
+    nav: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      position: 'relative',
+      zIndex: 1,
+    },
+    navBtn: {
+      width: 34,
+      height: 34,
+      color: theme.palette.text.disabled,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      borderRadius: '50%',
+      '&:hover': {
+        background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.selected,
+        color: theme.palette.text.primary,
+        borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider,
+      },
+    },
+    dot: {
+      height: 6,
+      borderRadius: 3,
+      background: isDark ? 'rgba(255,255,255,0.15)' : theme.palette.action.selected,
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+    },
+    dotActive: {
+      background: '#6366f1',
+      width: '20px !important',
+    },
+    liveDot: {
+      width: 8,
+      height: 8,
+      borderRadius: '50%',
+      background: '#22c55e',
+      flexShrink: 0,
+      animation: `${livePulse} 2s ease-in-out infinite`,
+    },
+  };
+});
 
 const SLIDES = [
   {
@@ -192,6 +202,7 @@ const FEATURES = [
 
 const LoginLayoutNew = () => {
   const { classes } = useStyles();
+  const theme = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [fading, setFading] = useState(false);
 
@@ -224,10 +235,10 @@ const LoginLayoutNew = () => {
           <GpsFixed sx={{ color: '#fff', fontSize: 22 }} />
         </Box>
         <Box>
-          <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '0.12em', lineHeight: 1 }}>
+          <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: theme.palette.text.primary, letterSpacing: '0.12em', lineHeight: 1 }}>
             GEO
           </Typography>
-          <Typography sx={{ fontSize: '0.62rem', color: '#475569', letterSpacing: '0.18em', textTransform: 'uppercase', mt: 0.3 }}>
+          <Typography sx={{ fontSize: '0.62rem', color: theme.palette.text.disabled, letterSpacing: '0.18em', textTransform: 'uppercase', mt: 0.3 }}>
             Vehicle Tracking
           </Typography>
         </Box>
@@ -272,10 +283,10 @@ const LoginLayoutNew = () => {
               >
                 <Icon sx={{ fontSize: 16, color }} />
               </Box>
-              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0', lineHeight: 1.2 }}>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.2 }}>
                 {label}
               </Typography>
-              <Typography sx={{ fontSize: '0.7rem', color: '#475569', mt: 0.3 }}>{sub}</Typography>
+              <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled, mt: 0.3 }}>{sub}</Typography>
             </Box>
           ))}
         </Box>
@@ -313,7 +324,7 @@ const LoginLayoutNew = () => {
         {/* Live indicator */}
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box className={classes.liveDot} />
-          <Typography sx={{ fontSize: '0.72rem', color: '#475569' }}>Systèmes opérationnels</Typography>
+          <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled }}>Systèmes opérationnels</Typography>
         </Box>
       </Box>
     </Box>
