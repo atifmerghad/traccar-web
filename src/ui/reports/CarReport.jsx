@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import {
   Box, Typography, Stack, Skeleton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   DirectionsCar, LocalGasStation, Speed, LocalParking,
   TrendingUp, Timer, Warning,
@@ -17,62 +18,72 @@ import {
   Tooltip as RechartsTooltip, ResponsiveContainer,
 } from 'recharts';
 
-const GLASS = {
-  background: 'rgba(255,255,255,0.05)',
-  backdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '20px',
+const StatCard = ({ icon, title, value, color, loading }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const glass = {
+    background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.background.paper,
+    backdropFilter: 'blur(16px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+    borderRadius: '20px',
+  };
+  return (
+    <Box sx={{
+      ...glass, flex: 1, minWidth: 0, p: 3,
+      display: 'flex', flexDirection: 'column', gap: 1.5,
+      position: 'relative', overflow: 'hidden',
+      '&::before': {
+        content: '""', position: 'absolute', top: -20, right: -20,
+        width: 80, height: 80, borderRadius: '50%',
+        background: `${color}22`,
+      },
+    }}>
+      <Box sx={{
+        width: 40, height: 40, borderRadius: '12px',
+        background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {icon && <Box sx={{ color, fontSize: 20 }}>{icon}</Box>}
+      </Box>
+      {loading ? (
+        <>
+          <Skeleton variant="text" width="60%" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} height={40} />
+          <Skeleton variant="text" width="80%" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
+        </>
+      ) : (
+        <>
+          <Typography sx={{ fontSize: '2rem', fontWeight: 900, color, lineHeight: 1.1 }}>{value}</Typography>
+          <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {title}
+          </Typography>
+        </>
+      )}
+    </Box>
+  );
 };
 
-const StatCard = ({ icon, title, value, color, loading }) => (
-  <Box sx={{
-    ...GLASS, flex: 1, minWidth: 0, p: 3,
-    display: 'flex', flexDirection: 'column', gap: 1.5,
-    position: 'relative', overflow: 'hidden',
-    '&::before': {
-      content: '""', position: 'absolute', top: -20, right: -20,
-      width: 80, height: 80, borderRadius: '50%',
-      background: `${color}22`,
-    },
-  }}>
-    <Box sx={{
-      width: 40, height: 40, borderRadius: '12px',
-      background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      {icon && <Box sx={{ color, fontSize: 20 }}>{icon}</Box>}
-    </Box>
-    {loading ? (
-      <>
-        <Skeleton variant="text" width="60%" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} height={40} />
-        <Skeleton variant="text" width="80%" sx={{ bgcolor: 'rgba(255,255,255,0.06)' }} />
-      </>
-    ) : (
-      <>
-        <Typography sx={{ fontSize: '2rem', fontWeight: 900, color, lineHeight: 1.1 }}>{value}</Typography>
-        <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          {title}
-        </Typography>
-      </>
-    )}
-  </Box>
-);
-
-const DetailRow = ({ label, value, color = '#f1f5f9' }) => (
-  <Stack direction="row" justifyContent="space-between" alignItems="center"
-    sx={{ py: 1.25, borderBottom: '1px solid rgba(255,255,255,0.05)', '&:last-child': { borderBottom: 'none' } }}>
-    <Typography sx={{ fontSize: '0.83rem', color: '#94a3b8' }}>{label}</Typography>
-    <Typography sx={{ fontSize: '0.83rem', fontWeight: 700, color }}>{value}</Typography>
-  </Stack>
-);
+const DetailRow = ({ label, value, color }) => {
+  const theme = useTheme();
+  return (
+    <Stack direction="row" justifyContent="space-between" alignItems="center"
+      sx={{ py: 1.25, borderBottom: `1px solid ${theme.palette.divider}`, '&:last-child': { borderBottom: 'none' } }}>
+      <Typography sx={{ fontSize: '0.83rem', color: theme.palette.text.secondary }}>{label}</Typography>
+      <Typography sx={{ fontSize: '0.83rem', fontWeight: 700, color: color || theme.palette.text.primary }}>{value}</Typography>
+    </Stack>
+  );
+};
 
 const CustomTooltip = ({ active, payload, label }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   if (!active || !payload?.length) return null;
   return (
     <Box sx={{
-      background: 'rgba(10,15,30,0.95)', backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', p: 1.5,
+      background: isDark ? 'rgba(10,15,30,0.95)' : theme.palette.background.paper,
+      backdropFilter: 'blur(12px)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+      borderRadius: '10px', p: 1.5,
     }}>
-      <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', mb: 0.5 }}>{label}</Typography>
+      <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, mb: 0.5 }}>{label}</Typography>
       <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#6366f1' }}>
         {payload[0]?.value?.toFixed(1)} km
       </Typography>
@@ -82,6 +93,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => {
   const t = useTranslation();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const devices = useSelector((state) => state.devices.items);
   const storeDeviceId = useSelector((state) => state.devices.selectedId);
   const deviceId = propDeviceId || storeDeviceId;
@@ -95,6 +108,13 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
   const [stops, setStops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const glass = {
+    background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.background.paper,
+    backdropFilter: 'blur(16px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+    borderRadius: '20px',
+  };
 
   const getDateRange = () => {
     let selectedFrom, selectedTo;
@@ -172,12 +192,15 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
   const selectedDevice = deviceId ? devices[deviceId] : null;
   const dateRange = getDateRange();
 
+  const tickColor = theme.palette.text.disabled;
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider;
+
   if (!deviceId) {
     return (
-      <Box sx={{ ...GLASS, p: 6, textAlign: 'center' }}>
-        <DirectionsCar sx={{ fontSize: 56, color: 'rgba(255,255,255,0.15)', mb: 2 }} />
-        <Typography sx={{ fontWeight: 700, color: '#f1f5f9', mb: 1 }}>Aucun véhicule sélectionné</Typography>
-        <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+      <Box sx={{ ...glass, p: 6, textAlign: 'center' }}>
+        <DirectionsCar sx={{ fontSize: 56, color: theme.palette.action.disabledBackground, mb: 2 }} />
+        <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}>Aucun véhicule sélectionné</Typography>
+        <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
           Sélectionnez un véhicule dans le filtre ci-dessus pour voir son rapport.
         </Typography>
       </Box>
@@ -186,10 +209,10 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
 
   if (error) {
     return (
-      <Box sx={{ ...GLASS, p: 6, textAlign: 'center' }}>
+      <Box sx={{ ...glass, p: 6, textAlign: 'center' }}>
         <Warning sx={{ fontSize: 48, color: '#ef4444', mb: 2 }} />
-        <Typography sx={{ fontWeight: 700, color: '#f1f5f9', mb: 1 }}>Erreur de chargement</Typography>
-        <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>{error}</Typography>
+        <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}>Erreur de chargement</Typography>
+        <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>{error}</Typography>
       </Box>
     );
   }
@@ -199,10 +222,10 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
       {/* Header strip */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
         <Box>
-          <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: '#f1f5f9' }}>
+          <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: theme.palette.text.primary }}>
             {selectedDevice?.name || 'Véhicule'}
           </Typography>
-          <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+          <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>
             {dayjs(dateRange.from).format('DD/MM/YYYY')} — {dayjs(dateRange.to).format('DD/MM/YYYY')}
           </Typography>
         </Box>
@@ -225,16 +248,16 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
       {/* Chart + Details side by side */}
       <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
         {/* Distance chart */}
-        <Box sx={{ ...GLASS, flex: 2, minWidth: 280, p: 3 }}>
-          <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: '#f1f5f9', mb: 0.5 }}>
+        <Box sx={{ ...glass, flex: 2, minWidth: 280, p: 3 }}>
+          <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: theme.palette.text.primary, mb: 0.5 }}>
             Distance par Trajet
           </Typography>
-          <Typography sx={{ fontSize: '0.77rem', color: '#94a3b8', mb: 2.5 }}>Kilomètres parcourus</Typography>
+          <Typography sx={{ fontSize: '0.77rem', color: theme.palette.text.secondary, mb: 2.5 }}>Kilomètres parcourus</Typography>
           {loading ? (
-            <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2, bgcolor: 'rgba(255,255,255,0.06)' }} />
+            <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2, bgcolor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
           ) : chartData.length === 0 ? (
             <Box sx={{ height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ color: '#475569', fontSize: '0.85rem' }}>Aucun trajet sur cette période</Typography>
+              <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.85rem' }}>Aucun trajet sur cette période</Typography>
             </Box>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
@@ -245,9 +268,9 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: tickColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: tickColor, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <RechartsTooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="distance" stroke="#6366f1" strokeWidth={2.5} fill="url(#distGrad)" dot={{ fill: '#6366f1', r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: '#818cf8' }} />
               </AreaChart>
@@ -257,8 +280,8 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
 
         {/* Details panels */}
         <Box sx={{ flex: 1, minWidth: 240, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Box sx={{ ...GLASS, p: 3, flex: 1 }}>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: '#f1f5f9', mb: 1.5 }}>
+          <Box sx={{ ...glass, p: 3, flex: 1 }}>
+            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: theme.palette.text.primary, mb: 1.5 }}>
               Mouvement
             </Typography>
             <DetailRow label="Trajets totaux" value={stats.totalMovements.toString()} />
@@ -269,8 +292,8 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
               color="#22c55e"
             />
           </Box>
-          <Box sx={{ ...GLASS, p: 3, flex: 1 }}>
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: '#f1f5f9', mb: 1.5 }}>
+          <Box sx={{ ...glass, p: 3, flex: 1 }}>
+            <Typography sx={{ fontSize: '0.9rem', fontWeight: 800, color: theme.palette.text.primary, mb: 1.5 }}>
               Efficacité
             </Typography>
             <DetailRow
@@ -280,7 +303,7 @@ const CarReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => 
             <DetailRow
               label="Efficacité carburant"
               value={stats.averageConsumption > 0 && stats.averageConsumption < 10 ? 'Efficace' : 'Normale'}
-              color={stats.averageConsumption > 0 && stats.averageConsumption < 10 ? '#22c55e' : '#94a3b8'}
+              color={stats.averageConsumption > 0 && stats.averageConsumption < 10 ? '#22c55e' : theme.palette.text.secondary}
             />
             <DetailRow label="Arrêts totaux" value={stats.totalStops.toString()} color="#f59e0b" />
           </Box>

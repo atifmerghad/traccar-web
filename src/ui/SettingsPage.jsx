@@ -1,15 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, MenuItem, Select,
   FormControl, Stack, IconButton, Snackbar, Alert, CircularProgress,
-  Avatar, Paper, Divider
 } from '@mui/material';
 import {
   ArrowBack, Check, Language, EmailOutlined, PhoneOutlined,
-  PersonOutlined, DescriptionOutlined, TranslateOutlined, InfoOutlined,
-  DirectionsCarOutlined
+  PersonOutlined, TranslateOutlined, InfoOutlined,
+  DirectionsCarOutlined,
 } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
+import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { sessionActions } from '../store';
@@ -17,93 +17,95 @@ import { useCatch } from '../reactHelper';
 import { useTranslation, useLocalization } from '../common/components/LocalizationProvider';
 import PageLayout from './PageLayout';
 
-const useStyles = makeStyles()((theme) => ({
-  root: {
-    width: '100%',
-    flex: 1,
-    boxSizing: 'border-box',
-    padding: theme.spacing(3),
-    background: '#080d1a',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  sectionCard: {
-    borderRadius: '16px',
-    background: 'rgba(255,255,255,0.05)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-    marginBottom: theme.spacing(3),
-  },
-  cardHeader: {
-    padding: '18px 24px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  cardTitle: { fontWeight: 700, fontSize: '0.95rem', color: '#f1f5f9' },
-  cardSubtitle: { color: '#475569', fontSize: '0.78rem' },
-  cardContent: { padding: '24px' },
-  label: {
-    fontSize: '0.82rem',
-    fontWeight: 600,
-    color: '#94a3b8',
-    marginBottom: '6px',
-    display: 'block',
-  },
-  detailRow: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '10px 0',
-    gap: '12px',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
-    '&:last-child': { borderBottom: 'none' },
-  },
-  detailLabel: { color: '#475569', fontSize: '0.82rem', width: '80px', flexShrink: 0 },
-  detailValue: { color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 600, wordBreak: 'break-all' },
-}));
-
-const darkInput = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '10px',
-    background: 'rgba(255,255,255,0.06)',
-    color: '#f1f5f9',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-    '&.Mui-focused fieldset': { borderColor: '#6366f1' },
-  },
-  '& .MuiInputLabel-root': { color: '#475569' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
-};
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    root: {
+      width: '100%',
+      flex: 1,
+      boxSizing: 'border-box',
+      padding: theme.spacing(3),
+      background: theme.palette.background.default,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+    },
+    sectionCard: {
+      borderRadius: '16px',
+      background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.background.paper,
+      backdropFilter: 'blur(12px)',
+      border: `1px solid ${theme.palette.divider}`,
+      overflow: 'hidden',
+      marginBottom: theme.spacing(3),
+    },
+    cardHeader: {
+      padding: '18px 24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    iconBox: {
+      width: 40,
+      height: 40,
+      borderRadius: '10px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    cardTitle: { fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary },
+    cardSubtitle: { color: theme.palette.text.disabled, fontSize: '0.78rem' },
+    cardContent: { padding: '24px' },
+    label: {
+      fontSize: '0.82rem',
+      fontWeight: 600,
+      color: theme.palette.text.secondary,
+      marginBottom: '6px',
+      display: 'block',
+    },
+    detailRow: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '10px 0',
+      gap: '12px',
+      borderBottom: `1px solid ${theme.palette.divider}`,
+      '&:last-child': { borderBottom: 'none' },
+    },
+    detailLabel: { color: theme.palette.text.disabled, fontSize: '0.82rem', width: '80px', flexShrink: 0 },
+    detailValue: { color: theme.palette.text.primary, fontSize: '0.82rem', fontWeight: 600, wordBreak: 'break-all' },
+  };
+});
 
 const SettingsPage = () => {
   const { classes } = useStyles();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const t = useTranslation();
   const { language, setLanguage } = useLocalization();
   const user = useSelector((state) => state.session.user);
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const darkInput = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '10px',
+      background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+      color: theme.palette.text.primary,
+      '& fieldset': { borderColor: theme.palette.divider },
+      '&:hover fieldset': { borderColor: theme.palette.action.selected },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+    },
+    '& .MuiInputLabel-root': { color: theme.palette.text.disabled },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
+  };
 
-  // --- VEHICLE STATE ---
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [vehicleData, setVehicleData] = useState({ name: '', uniqueId: '', model: '' });
   const [loadingDevices, setLoadingDevices] = useState(false);
 
-  // --- PROFILE STATE[cite: 5] ---
   const nameParts = user?.name?.split(' ') || [];
   const [profileData, setProfileData] = useState({
     firstName: nameParts[0] || '',
@@ -113,17 +115,14 @@ const SettingsPage = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState(language || 'fr');
 
-  // Fetch Devices for the Selection Dropdown
   useEffect(() => {
     const fetchDevices = async () => {
       setLoadingDevices(true);
       try {
         const response = await fetch('/api/devices');
-        if (response.ok) {
-          setDevices(await response.json());
-        }
+        if (response.ok) setDevices(await response.json());
       } catch (e) {
-        console.error("Failed to fetch devices", e);
+        console.error('Failed to fetch devices', e);
       } finally {
         setLoadingDevices(false);
       }
@@ -133,28 +132,22 @@ const SettingsPage = () => {
 
   const handleDeviceSelect = (id) => {
     setSelectedDeviceId(id);
-    const device = devices.find(d => d.id === id);
+    const device = devices.find((d) => d.id === id);
     if (device) {
-      setVehicleData({
-        name: device.name || '',
-        uniqueId: device.uniqueId || '',
-        model: device.model || '',
-      });
+      setVehicleData({ name: device.name || '', uniqueId: device.uniqueId || '', model: device.model || '' });
     }
   };
 
   const handleVehicleUpdate = useCatch(async () => {
-    const device = devices.find(d => d.id === selectedDeviceId);
+    const device = devices.find((d) => d.id === selectedDeviceId);
     const updatedDevice = { ...device, ...vehicleData };
-
     const response = await fetch(`/api/devices/${selectedDeviceId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedDevice),
     });
-
     if (response.ok) {
-      setDevices(devices.map(d => d.id === selectedDeviceId ? updatedDevice : d));
+      setDevices(devices.map((d) => (d.id === selectedDeviceId ? updatedDevice : d)));
       setSnackbar({ open: true, message: t('sharedSaved'), severity: 'success' });
     } else {
       setSnackbar({ open: true, message: t('sharedError'), severity: 'error' });
@@ -202,20 +195,25 @@ const SettingsPage = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <IconButton
             onClick={() => navigate(-1)}
-            sx={{ mr: 1.5, color: '#94a3b8', bgcolor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px' }}
+            sx={{
+              mr: 1.5,
+              color: theme.palette.text.secondary,
+              bgcolor: theme.palette.action.hover,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: '10px',
+            }}
           >
             <ArrowBack />
           </IconButton>
           <Box>
-            <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#f1f5f9' }}>{t('settingsTitle')}</Typography>
-            <Typography sx={{ color: '#475569', fontSize: '0.82rem' }}>{t('sharedPreferences')}</Typography>
+            <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: 'text.primary' }}>{t('settingsTitle')}</Typography>
+            <Typography sx={{ color: 'text.disabled', fontSize: '0.82rem' }}>{t('sharedPreferences')}</Typography>
           </Box>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 3, width: '100%', alignItems: 'flex-start' }}>
-          {/* LEFT COLUMN: VEHICLE & PROFILE[cite: 5] */}
+          {/* LEFT COLUMN */}
           <Box sx={{ flex: 2, minWidth: 0 }}>
-
             {/* Vehicle Selection & Edit Card */}
             <Box className={classes.sectionCard}>
               <Box className={classes.cardHeader}>
@@ -235,14 +233,16 @@ const SettingsPage = () => {
                     onChange={(e) => handleDeviceSelect(e.target.value)}
                     displayEmpty
                     sx={{
-                      background: 'rgba(255,255,255,0.06)',
+                      background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
                       borderRadius: '10px',
-                      color: '#f1f5f9',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
-                      '& .MuiSvgIcon-root': { color: '#475569' },
+                      color: theme.palette.text.primary,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.divider },
+                      '& .MuiSvgIcon-root': { color: theme.palette.text.disabled },
                     }}
                   >
-                    <MenuItem value="" disabled>{loadingDevices ? <CircularProgress size={20} /> : 'Choisissez un véhicule à modifier...'}</MenuItem>
+                    <MenuItem value="" disabled>
+                      {loadingDevices ? <CircularProgress size={20} /> : 'Choisissez un véhicule à modifier...'}
+                    </MenuItem>
                     {devices.map((device) => (
                       <MenuItem key={device.id} value={device.id}>{device.name}</MenuItem>
                     ))}
@@ -254,34 +254,20 @@ const SettingsPage = () => {
                     <Box sx={{ display: 'flex', gap: 2 }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography className={classes.label}>Nom du véhicule</Typography>
-                        <TextField
-                          fullWidth
-                          value={vehicleData.name}
-                          onChange={(e) => setVehicleData({ ...vehicleData, name: e.target.value })}
-                          sx={darkInput}
-                        />
+                        <TextField fullWidth value={vehicleData.name} onChange={(e) => setVehicleData({ ...vehicleData, name: e.target.value })} sx={darkInput} />
                       </Box>
                       <Box sx={{ flex: 1 }}>
                         <Typography className={classes.label}>Identifiant Unique (IMEI)</Typography>
-                        <TextField
-                          fullWidth
-                          value={vehicleData.uniqueId}
-                          onChange={(e) => setVehicleData({ ...vehicleData, uniqueId: e.target.value })}
-                          sx={darkInput}
-                        />
+                        <TextField fullWidth value={vehicleData.uniqueId} onChange={(e) => setVehicleData({ ...vehicleData, uniqueId: e.target.value })} sx={darkInput} />
                       </Box>
                     </Box>
                     <Box>
                       <Typography className={classes.label}>Modèle</Typography>
-                      <TextField
-                        fullWidth
-                        value={vehicleData.model}
-                        onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
-                        sx={darkInput}
-                      />
+                      <TextField fullWidth value={vehicleData.model} onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })} sx={darkInput} />
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button variant="contained" startIcon={<Check />} onClick={handleVehicleUpdate} sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
+                      <Button variant="contained" startIcon={<Check />} onClick={handleVehicleUpdate}
+                        sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
                         Mettre à jour le véhicule
                       </Button>
                     </Box>
@@ -290,7 +276,7 @@ const SettingsPage = () => {
               </Box>
             </Box>
 
-            {/* Profile Info Section[cite: 5] */}
+            {/* Profile Info Section */}
             <Box className={classes.sectionCard}>
               <Box className={classes.cardHeader}>
                 <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.2)' }}>
@@ -317,7 +303,8 @@ const SettingsPage = () => {
                   <TextField fullWidth value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} sx={darkInput} />
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button variant="contained" startIcon={<Check />} onClick={handleProfileUpdate} sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
+                  <Button variant="contained" startIcon={<Check />} onClick={handleProfileUpdate}
+                    sx={{ bgcolor: '#6366f1', borderRadius: '10px', fontWeight: 700, textTransform: 'none' }}>
                     Mettre à jour le profil
                   </Button>
                 </Box>
@@ -325,9 +312,9 @@ const SettingsPage = () => {
             </Box>
           </Box>
 
-          {/* RIGHT COLUMN: LANGUAGE & ACCOUNT[cite: 5] */}
+          {/* RIGHT COLUMN */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            {/* Language Selection Section[cite: 5] */}
+            {/* Language Selection Section */}
             <Box className={classes.sectionCard}>
               <Box className={classes.cardHeader}>
                 <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.2)' }}>
@@ -340,8 +327,8 @@ const SettingsPage = () => {
               </Box>
               <Box className={classes.cardContent}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                  <Language sx={{ fontSize: 17, color: '#475569' }} />
-                  <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#94a3b8' }}>Langue</Typography>
+                  <Language sx={{ fontSize: 17, color: 'text.disabled' }} />
+                  <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'text.secondary' }}>Langue</Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
                   {LANGUAGES.map(({ code, label }) => {
@@ -356,10 +343,10 @@ const SettingsPage = () => {
                           padding: '6px 14px',
                           fontSize: '0.8rem',
                           fontWeight: 600,
-                          border: `1px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
-                          bgcolor: selected ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-                          color: selected ? '#818cf8' : '#94a3b8',
-                          '&:hover': { bgcolor: selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.08)' },
+                          border: `1px solid ${selected ? '#6366f1' : theme.palette.divider}`,
+                          bgcolor: selected ? 'rgba(99,102,241,0.15)' : theme.palette.action.hover,
+                          color: selected ? '#818cf8' : theme.palette.text.secondary,
+                          '&:hover': { bgcolor: selected ? 'rgba(99,102,241,0.2)' : theme.palette.action.selected },
                         }}
                       >
                         {label}
@@ -367,13 +354,13 @@ const SettingsPage = () => {
                     );
                   })}
                 </Stack>
-                <Typography sx={{ color: '#475569', fontSize: '0.73rem' }}>
+                <Typography sx={{ color: 'text.disabled', fontSize: '0.73rem' }}>
                   Sélectionnez votre langue préférée. Les modifications prendront effet immédiatement.
                 </Typography>
               </Box>
             </Box>
 
-            {/* Account Details Section[cite: 5] */}
+            {/* Account Details Section */}
             <Box className={classes.sectionCard}>
               <Box className={classes.cardHeader}>
                 <Box className={classes.iconBox} sx={{ bgcolor: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}>
@@ -387,7 +374,7 @@ const SettingsPage = () => {
               <Box className={classes.cardContent}>
                 {accountDetails.map((row, i) => (
                   <Box key={i} className={classes.detailRow}>
-                    <Box sx={{ color: '#475569', display: 'flex', fontSize: 18 }}>{row.icon}</Box>
+                    <Box sx={{ color: 'text.disabled', display: 'flex', fontSize: 18 }}>{row.icon}</Box>
                     <span className={classes.detailLabel}>{row.label}</span>
                     <span className={classes.detailValue}>{row.value}</span>
                   </Box>

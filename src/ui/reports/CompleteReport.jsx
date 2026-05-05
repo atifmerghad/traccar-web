@@ -4,6 +4,7 @@ import {
   Box, Typography, Stack, Skeleton, TablePagination,
   Menu, MenuItem, ListItemIcon, ListItemText,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   History, ContentCopy, Share, KeyboardArrowUp,
   KeyboardArrowDown as SortDown, TableRows, Warning,
@@ -17,13 +18,6 @@ import {
 } from '../../common/util/formatter';
 import dayjs from 'dayjs';
 import AddressValue from '../../common/components/AddressValue';
-
-const GLASS = {
-  background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderRadius: '16px',
-};
 
 const MovementIcon = () => (
   <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 4px)', gap: '2px' }}>
@@ -54,26 +48,33 @@ const Pill = ({ label, color, bg }) => (
 );
 
 const SortIcon = ({ field, sortField, sortDir }) => {
-  if (field !== sortField) return <SortDown sx={{ fontSize: 14, color: 'rgba(255,255,255,0.2)' }} />;
+  const theme = useTheme();
+  if (field !== sortField) return <SortDown sx={{ fontSize: 14, color: theme.palette.text.disabled }} />;
   return sortDir === 'asc'
     ? <KeyboardArrowUp sx={{ fontSize: 14, color: '#6366f1' }} />
     : <SortDown sx={{ fontSize: 14, color: '#6366f1' }} />;
 };
 
-const SkeletonRow = ({ cols }) => (
-  <Box sx={{ display: 'contents' }}>
-    <Box component="tr" sx={{ '& td': { py: 1.5, px: 1.5, borderBottom: '1px solid rgba(255,255,255,0.04)' } }}>
-      {Array(cols).fill(0).map((_, i) => (
-        <Box component="td" key={i}>
-          <Skeleton variant="text" sx={{ bgcolor: 'rgba(255,255,255,0.07)', borderRadius: 1 }} />
-        </Box>
-      ))}
+const SkeletonRow = ({ cols }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  return (
+    <Box sx={{ display: 'contents' }}>
+      <Box component="tr" sx={{ '& td': { py: 1.5, px: 1.5, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : theme.palette.divider}` } }}>
+        {Array(cols).fill(0).map((_, i) => (
+          <Box component="td" key={i}>
+            <Skeleton variant="text" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)', borderRadius: 1 }} />
+          </Box>
+        ))}
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }) => {
   const t = useTranslation();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const storeDeviceId = useSelector((state) => state.devices.selectedId);
   const deviceId = propDeviceId || storeDeviceId;
 
@@ -82,6 +83,7 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
   const volumeUnit = useAttributePreference('volumeUnit');
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [trips, setTrips] = useState([]);
@@ -90,6 +92,13 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [sortField, setSortField] = useState('start');
   const [sortDir, setSortDir] = useState('desc');
+
+  const glass = {
+    background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.background.paper,
+    backdropFilter: 'blur(16px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
+    borderRadius: '16px',
+  };
 
   const handleSort = (field) => {
     if (field === sortField) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -191,8 +200,9 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
     onClick: field ? () => handleSort(field) : undefined,
     sx: {
       fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase',
-      color: sortField === field ? '#6366f1' : '#475569',
-      bgcolor: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)',
+      color: sortField === field ? '#6366f1' : theme.palette.text.disabled,
+      bgcolor: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
+      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
       whiteSpace: 'nowrap', py: 1.5, px: 1.5,
       cursor: field ? 'pointer' : 'default',
       userSelect: 'none',
@@ -203,10 +213,10 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
 
   if (!deviceId) {
     return (
-      <Box sx={{ ...GLASS, p: 6, textAlign: 'center' }}>
-        <TableRows sx={{ fontSize: 56, color: 'rgba(255,255,255,0.1)', mb: 2 }} />
-        <Typography sx={{ fontWeight: 700, color: '#f1f5f9', mb: 1 }}>Aucun véhicule sélectionné</Typography>
-        <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+      <Box sx={{ ...glass, p: 6, textAlign: 'center' }}>
+        <TableRows sx={{ fontSize: 56, color: theme.palette.action.disabledBackground, mb: 2 }} />
+        <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}>Aucun véhicule sélectionné</Typography>
+        <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
           Sélectionnez un véhicule pour afficher le rapport complet.
         </Typography>
       </Box>
@@ -215,10 +225,10 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
 
   if (error) {
     return (
-      <Box sx={{ ...GLASS, p: 6, textAlign: 'center' }}>
+      <Box sx={{ ...glass, p: 6, textAlign: 'center' }}>
         <Warning sx={{ fontSize: 48, color: '#ef4444', mb: 2 }} />
-        <Typography sx={{ fontWeight: 700, color: '#f1f5f9', mb: 1 }}>Erreur</Typography>
-        <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>{error}</Typography>
+        <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1 }}>Erreur</Typography>
+        <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>{error}</Typography>
       </Box>
     );
   }
@@ -228,8 +238,8 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
       {/* Summary totals strip */}
       <Box sx={{
         display: 'flex', gap: 3, px: 2, py: 1.5,
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
         borderRadius: '14px 14px 0 0',
         flexWrap: 'wrap',
       }}>
@@ -240,7 +250,7 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
           { label: 'Arrêts', value: totals.stops.toString(), color: '#6366f1' },
         ].map((item) => (
           <Box key={item.label}>
-            <Typography sx={{ fontSize: '0.7rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</Typography>
             <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color: item.color }}>{item.value}</Typography>
           </Box>
         ))}
@@ -248,8 +258,8 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
 
       {/* Table wrapper */}
       <Box sx={{
-        ...GLASS, borderRadius: '0 0 14px 14px',
-        border: '1px solid rgba(255,255,255,0.07)',
+        ...glass, borderRadius: '0 0 14px 14px',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
         borderTop: 'none', overflow: 'auto',
       }}>
         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
@@ -293,9 +303,9 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
             ) : pageData.length === 0 ? (
               <Box component="tr">
                 <Box component="td" colSpan={9} sx={{ py: 8, textAlign: 'center' }}>
-                  <TableRows sx={{ fontSize: 48, color: 'rgba(255,255,255,0.1)', mb: 1.5, display: 'block', mx: 'auto' }} />
-                  <Typography sx={{ color: '#475569', fontWeight: 600 }}>Aucune donnée</Typography>
-                  <Typography sx={{ color: '#334155', fontSize: '0.82rem', mt: 0.5 }}>
+                  <TableRows sx={{ fontSize: 48, color: theme.palette.action.disabledBackground, mb: 1.5, display: 'block', mx: 'auto' }} />
+                  <Typography sx={{ color: theme.palette.text.disabled, fontWeight: 600 }}>Aucune donnée</Typography>
+                  <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.82rem', mt: 0.5 }}>
                     Essayez une autre période ou un autre véhicule.
                   </Typography>
                 </Box>
@@ -310,10 +320,11 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
                     cursor: 'pointer',
                     '& td': {
                       py: 1.25, px: 1.5, fontSize: '0.82rem',
-                      color: '#94a3b8', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      color: theme.palette.text.secondary,
+                      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : theme.palette.divider}`,
                       whiteSpace: 'nowrap',
                     },
-                    '&:hover td': { bgcolor: 'rgba(99,102,241,0.06)', color: '#cbd5e1' },
+                    '&:hover td': { bgcolor: 'rgba(99,102,241,0.06)', color: theme.palette.text.primary },
                     '&:last-child td': { borderBottom: 'none' },
                   }}
                 >
@@ -328,13 +339,13 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
                   <Box component="td" sx={{ textAlign: 'center' }}>
                     {row.distance > 0
                       ? <Pill label={formatDistance(row.distance, distanceUnit, t)} color="#92400e" bg="rgba(249,115,22,0.12)" />
-                      : <Typography sx={{ fontSize: '0.82rem', color: '#334155' }}>0.0</Typography>
+                      : <Typography sx={{ fontSize: '0.82rem', color: theme.palette.text.disabled }}>0.0</Typography>
                     }
                   </Box>
                   <Box component="td" sx={{ textAlign: 'center' }}>
                     {row.maxSpeed > 0
                       ? <Pill label={formatSpeed(row.maxSpeed, speedUnit, t)} color="#166534" bg="rgba(34,197,94,0.12)" />
-                      : <Typography sx={{ fontSize: '0.82rem', color: '#334155' }}>0</Typography>
+                      : <Typography sx={{ fontSize: '0.82rem', color: theme.palette.text.disabled }}>0</Typography>
                     }
                   </Box>
                   <Box component="td" sx={{ textAlign: 'center' }}>
@@ -359,7 +370,7 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
       {!loading && reportData.length > 10 && (
         <Box sx={{
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-          borderTop: '1px solid rgba(255,255,255,0.06)', pt: 1,
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`, pt: 1,
         }}>
           <TablePagination
             component="div"
@@ -372,10 +383,10 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
             labelRowsPerPage="Lignes:"
             labelDisplayedRows={({ from: f, to: tVal, count }) => `${f}–${tVal} sur ${count}`}
             sx={{
-              color: '#94a3b8', fontSize: '0.82rem',
-              '& .MuiTablePagination-select': { color: '#f1f5f9' },
-              '& .MuiTablePagination-selectIcon': { color: '#94a3b8' },
-              '& .MuiIconButton-root': { color: '#94a3b8', '&:disabled': { color: '#334155' } },
+              color: theme.palette.text.secondary, fontSize: '0.82rem',
+              '& .MuiTablePagination-select': { color: theme.palette.text.primary },
+              '& .MuiTablePagination-selectIcon': { color: theme.palette.text.secondary },
+              '& .MuiIconButton-root': { color: theme.palette.text.secondary, '&:disabled': { color: theme.palette.text.disabled } },
             }}
           />
         </Box>
@@ -385,14 +396,15 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
+        onClose={() => { setAnchorEl(null); setSelectedRow(null); }}
         slotProps={{
           paper: {
             elevation: 0,
             sx: {
               borderRadius: '14px', mt: 1, minWidth: 200,
-              background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: isDark ? 'rgba(10,15,30,0.97)' : theme.palette.background.paper,
+              backdropFilter: 'blur(24px)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
               boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             },
           },
@@ -404,9 +416,9 @@ const CompleteReport = ({ deviceId: propDeviceId, period, customFrom, customTo }
           { icon: <Share fontSize="small" />, label: "Partager l'Activité" },
         ].map((item, i) => (
           <MenuItem key={i} onClick={() => { setAnchorEl(null); setSelectedRow(null); }}
-            sx={{ py: 1.25, px: 2, gap: 1.5, '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' } }}>
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#94a3b8' }}>{item.icon}</ListItemIcon>
-            <ListItemText slotProps={{ primary: { style: { fontSize: '0.88rem', fontWeight: 500, color: '#f1f5f9' } } }}>
+            sx={{ py: 1.25, px: 2, gap: 1.5, '&:hover': { bgcolor: theme.palette.action.hover } }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: theme.palette.text.secondary }}>{item.icon}</ListItemIcon>
+            <ListItemText slotProps={{ primary: { style: { fontSize: '0.88rem', fontWeight: 500, color: theme.palette.text.primary } } }}>
               {item.label}
             </ListItemText>
           </MenuItem>

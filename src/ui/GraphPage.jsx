@@ -4,6 +4,7 @@ import {
   Stack, Avatar, CircularProgress, IconButton, ToggleButtonGroup,
   ToggleButton, Chip, Skeleton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   CalendarToday, DirectionsCar, KeyboardArrowDown, LocalGasStation,
   Speed, AccessTime, Domain, Refresh as RefreshIcon, ShowChart,
@@ -19,120 +20,100 @@ import { makeStyles } from 'tss-react/mui';
 import dayjs from 'dayjs';
 import PageLayout from './PageLayout';
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const PAGE_BG = '#080d1a';
-
-const useStyles = makeStyles()(() => ({
-  root: {
-    padding: '24px',
-    background: PAGE_BG,
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  glassCard: {
-    background: 'rgba(255,255,255,0.04)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '18px',
-    padding: '20px 24px',
-  },
-  glassSelect: {
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '12px',
-    color: '#e2e8f0',
-    minWidth: '200px',
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
-    '& .MuiSelect-select': { paddingLeft: '14px', fontWeight: 600, fontSize: '0.87rem' },
-    '& .MuiSvgIcon-root': { color: '#475569' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-  },
-  glassDate: {
-    '& .MuiOutlinedInput-root': {
-      background: 'rgba(255,255,255,0.05)',
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    root: {
+      padding: '24px',
+      background: theme.palette.background.default,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+    },
+    glassCard: {
+      background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.background.paper,
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      borderRadius: '18px',
+      padding: '20px 24px',
+    },
+    glassSelect: {
+      background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
       borderRadius: '12px',
-      color: '#e2e8f0',
-      fontSize: '0.84rem',
-      '& fieldset': { border: '1px solid rgba(255,255,255,0.1)' },
-      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+      color: theme.palette.text.primary,
+      minWidth: '200px',
+      '& .MuiOutlinedInput-notchedOutline': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}` },
+      '& .MuiSelect-select': { paddingLeft: '14px', fontWeight: 600, fontSize: '0.87rem' },
+      '& .MuiSvgIcon-root': { color: theme.palette.text.disabled },
+      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
     },
-    '& input': { color: '#e2e8f0', fontSize: '0.84rem' },
-    '& input::-webkit-calendar-picker-indicator': { filter: 'invert(0.6)', cursor: 'pointer' },
-  },
-  metricCard: {
-    background: 'rgba(255,255,255,0.04)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '18px',
-    padding: '18px 20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    transition: 'border-color 0.2s, transform 0.15s',
-    '&:hover': { borderColor: 'rgba(255,255,255,0.15)', transform: 'translateY(-1px)' },
-  },
-  toggleBtn: {
-    color: '#94a3b8 !important',
-    border: '1px solid rgba(255,255,255,0.08) !important',
-    padding: '0 14px !important',
-    height: '32px !important',
-    fontSize: '0.78rem !important',
-    textTransform: 'none !important',
-    lineHeight: '1 !important',
-    '&.Mui-selected': {
-      background: 'rgba(99,102,241,0.15) !important',
-      color: '#a5b4fc !important',
-      borderColor: 'rgba(99,102,241,0.35) !important',
+    glassDate: {
+      '& .MuiOutlinedInput-root': {
+        background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
+        borderRadius: '12px',
+        color: theme.palette.text.primary,
+        fontSize: '0.84rem',
+        '& fieldset': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}` },
+        '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
+        '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+      },
+      '& input': { color: theme.palette.text.primary, fontSize: '0.84rem' },
+      '& input::-webkit-calendar-picker-indicator': { filter: 'invert(0.6)', cursor: 'pointer' },
     },
-  },
-  metricTabBtn: {
-    color: '#94a3b8 !important',
-    border: '1px solid rgba(255,255,255,0.08) !important',
-    padding: '0 14px !important',
-    height: '32px !important',
-    fontSize: '0.8rem !important',
-    textTransform: 'none !important',
-    lineHeight: '1 !important',
-    borderRadius: '10px !important',
-    '&.Mui-selected': {
-      background: 'rgba(99,102,241,0.18) !important',
-      color: '#a5b4fc !important',
-      borderColor: 'rgba(99,102,241,0.4) !important',
+    metricCard: {
+      background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.background.paper,
+      backdropFilter: 'blur(12px)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      borderRadius: '18px',
+      padding: '18px 20px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      transition: 'border-color 0.2s, transform 0.15s',
+      '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.15)' : theme.palette.divider, transform: 'translateY(-1px)' },
     },
-  },
-  statItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '12px 14px',
-    background: 'rgba(255,255,255,0.03)',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.06)',
-  },
-}));
-
-// ─── Shared dark menu props for Select dropdowns ─────────────────────────────
-
-const DARK_MENU_PROPS = {
-  PaperProps: {
-    sx: {
-      background: '#0f172a',
-      border: '1px solid rgba(255,255,255,0.1)',
+    toggleBtn: {
+      color: `${theme.palette.text.secondary} !important`,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider} !important`,
+      padding: '0 14px !important',
+      height: '32px !important',
+      fontSize: '0.78rem !important',
+      textTransform: 'none !important',
+      lineHeight: '1 !important',
+      '&.Mui-selected': {
+        background: 'rgba(99,102,241,0.15) !important',
+        color: '#a5b4fc !important',
+        borderColor: 'rgba(99,102,241,0.35) !important',
+      },
+    },
+    metricTabBtn: {
+      color: `${theme.palette.text.secondary} !important`,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider} !important`,
+      padding: '0 14px !important',
+      height: '32px !important',
+      fontSize: '0.8rem !important',
+      textTransform: 'none !important',
+      lineHeight: '1 !important',
+      borderRadius: '10px !important',
+      '&.Mui-selected': {
+        background: 'rgba(99,102,241,0.18) !important',
+        color: '#a5b4fc !important',
+        borderColor: 'rgba(99,102,241,0.4) !important',
+      },
+    },
+    statItem: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '4px',
+      padding: '12px 14px',
+      background: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
       borderRadius: '12px',
-      mt: 0.5,
-      '& .MuiMenuItem-root': { color: '#cbd5e1', fontSize: '0.87rem', py: 1 },
-      '& .MuiMenuItem-root:hover': { background: 'rgba(255,255,255,0.06)' },
-      '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
-      '& .MuiMenuItem-root.Mui-selected:hover': { background: 'rgba(99,102,241,0.22)' },
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`,
     },
-  },
-};
-
-// ─── Period presets ───────────────────────────────────────────────────────────
+  };
+});
 
 const PERIODS = [
   { label: "Aujourd'hui", value: 'today' },
@@ -161,8 +142,6 @@ const PERIOD_LABEL = {
   custom: 'Personnalisé',
 };
 
-// ─── Metric configuration ─────────────────────────────────────────────────────
-
 const CHART_METRICS = [
   { key: 'speed', label: 'Vitesse', unit: 'km/h', color: '#6366f1', Icon: Speed },
   { key: 'altitude', label: 'Altitude', unit: 'm', color: '#22c55e', Icon: Landscape },
@@ -181,8 +160,6 @@ const KEY_STATS = [
   { label: 'Temps en mouvement', key: 'movingPct', color: '#6366f1', Icon: FlashOn },
   { label: 'Points collectés', key: 'pointCount', color: '#94a3b8', Icon: ShowChart },
 ];
-
-// ─── Data helpers ─────────────────────────────────────────────────────────────
 
 const downsample = (arr, max = 500) => {
   if (arr.length <= max) return arr;
@@ -228,13 +205,17 @@ const computeDerivedStats = (positions) => {
   };
 };
 
-// ─── Custom chart tooltip ─────────────────────────────────────────────────────
-
 const ChartTooltip = ({ active, payload, label, unit }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   if (!active || !payload?.length) return null;
   return (
-    <Box sx={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', p: '10px 14px' }}>
-      <Typography sx={{ fontSize: '0.72rem', color: '#64748b', mb: 0.5 }}>{label}</Typography>
+    <Box sx={{
+      background: isDark ? '#0f172a' : theme.palette.background.paper,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : theme.palette.divider}`,
+      borderRadius: '10px', p: '10px 14px',
+    }}>
+      <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled, mb: 0.5 }}>{label}</Typography>
       {payload.map((e, i) => (
         <Typography key={i} sx={{ fontSize: '0.86rem', fontWeight: 700, color: e.color }}>
           {e.name}: {e.value} {unit}
@@ -244,10 +225,28 @@ const ChartTooltip = ({ active, payload, label, unit }) => {
   );
 };
 
-// ─── GraphPage ────────────────────────────────────────────────────────────────
-
 const GraphPage = () => {
   const { classes } = useStyles();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const darkMenuProps = {
+    PaperProps: {
+      sx: {
+        background: isDark ? '#0f172a' : theme.palette.background.paper,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+        borderRadius: '12px',
+        mt: 0.5,
+        '& .MuiMenuItem-root': { color: theme.palette.text.secondary, fontSize: '0.87rem', py: 1 },
+        '& .MuiMenuItem-root:hover': { background: theme.palette.action.hover },
+        '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
+        '& .MuiMenuItem-root.Mui-selected:hover': { background: 'rgba(99,102,241,0.22)' },
+      },
+    },
+  };
+
+  const tickColor = theme.palette.text.disabled;
+  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : theme.palette.divider;
 
   const [devices, setDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState('');
@@ -350,23 +349,23 @@ const GraphPage = () => {
 
   const renderChart = () => {
     if (loading) {
-      return <Skeleton variant="rectangular" height={320} sx={{ bgcolor: 'rgba(255,255,255,0.04)', borderRadius: '10px' }} />;
+      return <Skeleton variant="rectangular" height={320} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover, borderRadius: '10px' }} />;
     }
     if (!mergedData.length) {
       return (
         <Box sx={{ height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-          <BarChartIcon sx={{ fontSize: 56, color: 'rgba(255,255,255,0.06)' }} />
-          <Typography sx={{ color: '#334155', fontSize: '0.85rem' }}>Aucune donnée — sélectionnez un véhicule et appuyez sur Actualiser</Typography>
+          <BarChartIcon sx={{ fontSize: 56, color: theme.palette.action.disabledBackground }} />
+          <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.85rem' }}>Aucune donnée — sélectionnez un véhicule et appuyez sur Actualiser</Typography>
         </Box>
       );
     }
 
     const sharedProps = { data: mergedData, margin: { top: 10, right: 20, left: 0, bottom: 0 } };
-    const xAxis = <XAxis dataKey="time" tick={{ fill: '#475569', fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />;
-    const yAxis = <YAxis tick={{ fill: '#475569', fontSize: 11 }} tickLine={false} axisLine={false} width={50} tickFormatter={(v) => `${v}`} />;
-    const grid = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
+    const xAxis = <XAxis dataKey="time" tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />;
+    const yAxis = <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={50} tickFormatter={(v) => `${v}`} />;
+    const grid = <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />;
     const tooltip = <RTooltip content={(p) => <ChartTooltip {...p} unit={m.unit} />} />;
-    const legend = hasCmp ? <Legend wrapperStyle={{ color: '#94a3b8', fontSize: '0.76rem', paddingTop: '8px' }} /> : null;
+    const legend = hasCmp ? <Legend wrapperStyle={{ color: theme.palette.text.secondary, fontSize: '0.76rem', paddingTop: '8px' }} /> : null;
 
     if (chartType === 'bar') {
       return (
@@ -424,8 +423,8 @@ const GraphPage = () => {
         {/* ── Header ── */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: '#f1f5f9' }}>Graphiques</Typography>
-            <Typography sx={{ fontSize: '0.82rem', color: '#475569', mt: 0.4 }}>
+            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: theme.palette.text.primary }}>Graphiques</Typography>
+            <Typography sx={{ fontSize: '0.82rem', color: theme.palette.text.disabled, mt: 0.4 }}>
               Visualisations des données de performance du véhicule
             </Typography>
           </Box>
@@ -441,10 +440,10 @@ const GraphPage = () => {
                   fontSize: '0.78rem',
                   fontWeight: 600,
                   cursor: 'pointer',
-                  color: period === p.value ? '#a5b4fc' : '#64748b',
-                  borderColor: period === p.value ? 'rgba(99,102,241,0.45)' : 'rgba(255,255,255,0.1)',
+                  color: period === p.value ? '#a5b4fc' : theme.palette.text.disabled,
+                  borderColor: period === p.value ? 'rgba(99,102,241,0.45)' : theme.palette.divider,
                   background: period === p.value ? 'rgba(99,102,241,0.18)' : 'transparent',
-                  '&:hover': { borderColor: 'rgba(255,255,255,0.25)' },
+                  '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.25)' : theme.palette.divider },
                 }}
               />
             ))}
@@ -459,7 +458,7 @@ const GraphPage = () => {
             className={classes.glassSelect}
             IconComponent={KeyboardArrowDown}
             size="small"
-            MenuProps={DARK_MENU_PROPS}
+            MenuProps={darkMenuProps}
             startAdornment={<DirectionsCar sx={{ fontSize: 17, color: '#6366f1', ml: 1, mr: -0.5 }} />}
           >
             {devices.map((dev) => (
@@ -472,11 +471,11 @@ const GraphPage = () => {
             startIcon={<CompareArrows sx={{ fontSize: '16px !important' }} />}
             onClick={() => setShowComparison(!showComparison)}
             sx={{
-              bgcolor: showComparison ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.05)',
-              color: showComparison ? '#fb923c' : '#64748b',
+              bgcolor: showComparison ? 'rgba(249,115,22,0.12)' : theme.palette.action.hover,
+              color: showComparison ? '#fb923c' : theme.palette.text.disabled,
               borderRadius: '12px',
               textTransform: 'none',
-              border: `1px solid ${showComparison ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              border: `1px solid ${showComparison ? 'rgba(249,115,22,0.3)' : theme.palette.divider}`,
               fontSize: '0.82rem',
               fontWeight: 600,
               px: 2,
@@ -495,8 +494,8 @@ const GraphPage = () => {
               sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(249,115,22,0.3) !important' } }}
               IconComponent={KeyboardArrowDown}
               size="small"
-              MenuProps={DARK_MENU_PROPS}
-              renderValue={(v) => v ? devices.find((d) => d.id === v)?.name : <em style={{ color: '#64748b' }}>Comparer avec...</em>}
+              MenuProps={darkMenuProps}
+              renderValue={(v) => v ? devices.find((d) => d.id === v)?.name : <em style={{ color: theme.palette.text.disabled }}>Comparer avec...</em>}
             >
               <MenuItem disabled value=""><em>Sélectionnez un véhicule</em></MenuItem>
               {devices.filter((d) => d.id !== selectedDevice).map((dev) => (
@@ -515,7 +514,7 @@ const GraphPage = () => {
                 onChange={(e) => setFromTime(e.target.value)}
                 sx={{ minWidth: 200 }}
                 slotProps={{
-                  input: { startAdornment: <CalendarToday sx={{ fontSize: 15, color: '#475569', mr: 1 }} /> },
+                  input: { startAdornment: <CalendarToday sx={{ fontSize: 15, color: theme.palette.text.disabled, mr: 1 }} /> },
                 }}
               />
               <TextField
@@ -553,13 +552,13 @@ const GraphPage = () => {
           {SUMMARY_CONFIG.map(({ label, key, Icon, color }) => (
             <Box key={key} className={classes.metricCard}>
               <Box>
-                <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: theme.palette.text.disabled, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {label}
                 </Typography>
                 <Stack direction="row" spacing={1.5} alignItems="baseline" sx={{ mt: 0.5, mb: 0.3 }}>
                   {loading
-                    ? <Skeleton width={70} height={28} sx={{ bgcolor: 'rgba(255,255,255,0.07)' }} />
-                    : <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: '#f1f5f9', lineHeight: 1 }}>{primaryMetrics[key]}</Typography>
+                    ? <Skeleton width={70} height={28} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
+                    : <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: theme.palette.text.primary, lineHeight: 1 }}>{primaryMetrics[key]}</Typography>
                   }
                   {compareMetrics && !loading && (
                     <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#f97316' }}>
@@ -567,7 +566,7 @@ const GraphPage = () => {
                     </Typography>
                   )}
                 </Stack>
-                <Typography sx={{ fontSize: '0.7rem', color: '#334155' }}>{PERIOD_LABEL[period]}</Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled }}>{PERIOD_LABEL[period]}</Typography>
               </Box>
               <Avatar sx={{ bgcolor: `${color}1a`, color, borderRadius: '14px', width: 44, height: 44 }}>
                 <Icon sx={{ fontSize: 20 }} />
@@ -580,10 +579,10 @@ const GraphPage = () => {
         <Box className={classes.glassCard}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box>
-              <Typography sx={{ fontWeight: 800, color: '#f1f5f9', fontSize: '1rem' }}>
+              <Typography sx={{ fontWeight: 800, color: theme.palette.text.primary, fontSize: '1rem' }}>
                 Analyse temporelle
               </Typography>
-              <Typography sx={{ fontSize: '0.73rem', color: '#475569', mt: 0.3 }}>
+              <Typography sx={{ fontSize: '0.73rem', color: theme.palette.text.disabled, mt: 0.3 }}>
                 {devices.find((d) => d.id === selectedDevice)?.name || '—'}
                 {primaryPositions.length > 0 && ` · ${primaryPositions.length} points · ${mergedData.length} affichés`}
               </Typography>
@@ -600,7 +599,7 @@ const GraphPage = () => {
                   gap: 0.5,
                   '& .MuiToggleButtonGroup-grouped': {
                     borderRadius: '10px !important',
-                    border: '1px solid rgba(255,255,255,0.08) !important',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider} !important`,
                     margin: 0,
                   },
                 }}
@@ -613,7 +612,7 @@ const GraphPage = () => {
                 ))}
               </ToggleButtonGroup>
 
-              <Box sx={{ width: '1px', height: 22, bgcolor: 'rgba(255,255,255,0.1)', mx: 0.5 }} />
+              <Box sx={{ width: '1px', height: 22, bgcolor: theme.palette.divider, mx: 0.5 }} />
 
               <ToggleButtonGroup
                 value={chartType}
@@ -625,7 +624,7 @@ const GraphPage = () => {
                   gap: 0.5,
                   '& .MuiToggleButtonGroup-grouped': {
                     borderRadius: '8px !important',
-                    border: '1px solid rgba(255,255,255,0.08) !important',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider} !important`,
                     margin: 0,
                   },
                 }}
@@ -645,23 +644,27 @@ const GraphPage = () => {
 
           {/* Speed Histogram */}
           <Box className={classes.glassCard}>
-            <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.95rem' }}>Distribution des vitesses</Typography>
-            <Typography sx={{ fontSize: '0.73rem', color: '#475569', mt: 0.3, mb: 2 }}>
+            <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '0.95rem' }}>Distribution des vitesses</Typography>
+            <Typography sx={{ fontSize: '0.73rem', color: theme.palette.text.disabled, mt: 0.3, mb: 2 }}>
               Répartition du temps passé à chaque plage de vitesse (km/h)
             </Typography>
             {loading ? (
-              <Skeleton variant="rectangular" height={190} sx={{ bgcolor: 'rgba(255,255,255,0.04)', borderRadius: '8px' }} />
+              <Skeleton variant="rectangular" height={190} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover, borderRadius: '8px' }} />
             ) : speedHistogram.length > 0 ? (
               <ResponsiveContainer width="100%" height={190}>
                 <BarChart data={speedHistogram} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="range" tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fill: '#475569', fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                  <XAxis dataKey="range" tick={{ fill: tickColor, fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fill: tickColor, fontSize: 10 }} tickLine={false} axisLine={false} />
                   <RTooltip
                     content={({ active, payload, label }) =>
                       active && payload?.length ? (
-                        <Box sx={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', p: '8px 12px' }}>
-                          <Typography sx={{ fontSize: '0.76rem', color: '#94a3b8' }}>{label} km/h</Typography>
+                        <Box sx={{
+                          background: isDark ? '#0f172a' : theme.palette.background.paper,
+                          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+                          borderRadius: '8px', p: '8px 12px',
+                        }}>
+                          <Typography sx={{ fontSize: '0.76rem', color: theme.palette.text.secondary }}>{label} km/h</Typography>
                           <Typography sx={{ fontSize: '0.86rem', fontWeight: 700, color: '#818cf8' }}>{payload[0].value} pts</Typography>
                         </Box>
                       ) : null
@@ -676,23 +679,23 @@ const GraphPage = () => {
               </ResponsiveContainer>
             ) : (
               <Box sx={{ height: 190, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography sx={{ color: '#334155', fontSize: '0.83rem' }}>Aucune donnée disponible</Typography>
+                <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.83rem' }}>Aucune donnée disponible</Typography>
               </Box>
             )}
           </Box>
 
           {/* Key Stats */}
           <Box className={classes.glassCard} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.95rem', mb: 0.5 }}>Statistiques clés</Typography>
+            <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '0.95rem', mb: 0.5 }}>Statistiques clés</Typography>
             {KEY_STATS.map(({ label, key, color, Icon: StatIcon }) => (
               <Box key={key} className={classes.statItem}>
-                <Typography sx={{ fontSize: '0.7rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {label}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <StatIcon sx={{ fontSize: 15, color }} />
                   {loading
-                    ? <Skeleton width={70} height={22} sx={{ bgcolor: 'rgba(255,255,255,0.07)' }} />
+                    ? <Skeleton width={70} height={22} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
                     : <Typography sx={{ fontSize: '1rem', fontWeight: 800, color }}>{derivedStats[key]}</Typography>
                   }
                 </Box>

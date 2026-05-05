@@ -6,6 +6,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Snackbar, Alert,
   Tooltip,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Search, Edit, Delete, Add, Layers, MedicalServicesOutlined,
   Construction, Waves, BuildOutlined, Refresh, Close,
@@ -15,150 +16,153 @@ import { makeStyles } from 'tss-react/mui';
 import dayjs from 'dayjs';
 import PageLayout from './PageLayout';
 
-const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => ({
-  root: {
-    width: '100%',
-    flex: 1,
-    boxSizing: 'border-box',
-    padding: theme.spacing(3),
-    background: '#080d1a',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  headerRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing(3),
-  },
-  pageTitle: {
-    fontWeight: 800,
-    color: '#f1f5f9',
-    fontSize: '1.25rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: theme.spacing(1),
-  },
-  pageSubtitle: { color: '#94a3b8', fontSize: '0.85rem' },
-  searchAndFilterRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing(3),
-    flexWrap: 'wrap',
-    gap: theme.spacing(2),
-  },
-  searchField: {
-    '& .MuiOutlinedInput-root': {
-      background: 'rgba(255,255,255,0.06)',
-      borderRadius: '25px',
-      width: '350px',
-      height: '45px',
-      fontSize: '0.9rem',
-      color: '#f1f5f9',
-      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-    },
-    '& .MuiOutlinedInput-input::placeholder': { color: '#475569', opacity: 1 },
-  },
-  filterIcon: {
-    width: 40,
-    height: 40,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(255,255,255,0.06)',
-    color: '#94a3b8',
-    borderRadius: '8px',
-  },
-  filterIconActive: {
-    background: 'rgba(99,102,241,0.2)',
-    border: '1px solid rgba(99,102,241,0.4)',
-    color: '#818cf8',
-  },
-  createButton: {
-    borderRadius: '25px',
-    textTransform: 'none',
-    fontWeight: 600,
-    padding: '8px 24px',
-    background: '#6366f1',
-    color: '#fff',
-    '&:hover': { background: '#4f46e5' },
-  },
-  maintenanceCard: {
-    borderRadius: '12px',
-    overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.08)',
-    backdropFilter: 'blur(12px)',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' },
-  },
-  bgRed: { background: 'linear-gradient(180deg, rgba(239,68,68,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
-  bgOrange: { background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
-  bgGreen: { background: 'linear-gradient(180deg, rgba(34,197,94,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
-  bgTeal: { background: 'linear-gradient(180deg, rgba(20,184,166,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
-  cardHeader: {
-    padding: '16px 16px 8px 16px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontSize: '0.95rem',
-    fontWeight: 700,
-    color: '#f1f5f9',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  priceChip: { fontWeight: 700, borderRadius: '4px', height: '24px' },
-  vehicleInfo: {
-    fontSize: '0.75rem',
-    color: '#94a3b8',
-    padding: '0 16px 16px 40px',
-    fontWeight: 500,
-  },
-  detailsGrid: {
-    padding: '0 16px',
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    rowGap: '4px',
-    columnGap: '12px',
-    fontSize: '0.8rem',
-  },
-  label: { color: '#475569' },
-  value: { color: '#e2e8f0', fontWeight: 600 },
-  progressSection: { padding: '16px' },
-  progressHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '6px',
-    '& span': { fontSize: '0.75rem', color: '#475569', fontWeight: 600 },
-  },
-  progressBar: { height: 6, borderRadius: 3 },
-  cardActions: {
-    display: 'flex',
-    borderTop: '1px solid rgba(255,255,255,0.06)',
-    '& button': {
+const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    root: {
+      width: '100%',
       flex: 1,
-      textTransform: 'none',
-      color: '#94a3b8',
-      fontSize: '0.8rem',
-      padding: '8px',
+      boxSizing: 'border-box',
+      padding: theme.spacing(3),
+      background: theme.palette.background.default,
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
     },
-  },
-  summaryBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '10px 16px',
-    borderRadius: 12,
-    background: 'rgba(255,255,255,0.05)',
-    backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    fontSize: '0.85rem',
-    fontWeight: 600,
-  },
-}));
+    headerRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: theme.spacing(3),
+    },
+    pageTitle: {
+      fontWeight: 800,
+      color: theme.palette.text.primary,
+      fontSize: '1.25rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing(1),
+    },
+    pageSubtitle: { color: theme.palette.text.secondary, fontSize: '0.85rem' },
+    searchAndFilterRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing(3),
+      flexWrap: 'wrap',
+      gap: theme.spacing(2),
+    },
+    searchField: {
+      '& .MuiOutlinedInput-root': {
+        background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+        borderRadius: '25px',
+        width: '350px',
+        height: '45px',
+        fontSize: '0.9rem',
+        color: theme.palette.text.primary,
+        '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider },
+        '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
+      },
+      '& .MuiOutlinedInput-input::placeholder': { color: theme.palette.text.disabled, opacity: 1 },
+    },
+    filterIcon: {
+      width: 40,
+      height: 40,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+      background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+      color: theme.palette.text.secondary,
+      borderRadius: '8px',
+    },
+    filterIconActive: {
+      background: 'rgba(99,102,241,0.2)',
+      border: '1px solid rgba(99,102,241,0.4)',
+      color: '#818cf8',
+    },
+    createButton: {
+      borderRadius: '25px',
+      textTransform: 'none',
+      fontWeight: 600,
+      padding: '8px 24px',
+      background: '#6366f1',
+      color: '#fff',
+      '&:hover': { background: '#4f46e5' },
+    },
+    maintenanceCard: {
+      borderRadius: '12px',
+      overflow: 'hidden',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      backdropFilter: 'blur(12px)',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' },
+    },
+    bgRed: { background: 'linear-gradient(180deg, rgba(239,68,68,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
+    bgOrange: { background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
+    bgGreen: { background: 'linear-gradient(180deg, rgba(34,197,94,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
+    bgTeal: { background: 'linear-gradient(180deg, rgba(20,184,166,0.12) 0%, rgba(255,255,255,0.04) 100%)' },
+    cardHeader: {
+      padding: '16px 16px 8px 16px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    cardTitle: {
+      fontSize: '0.95rem',
+      fontWeight: 700,
+      color: theme.palette.text.primary,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+    },
+    priceChip: { fontWeight: 700, borderRadius: '4px', height: '24px' },
+    vehicleInfo: {
+      fontSize: '0.75rem',
+      color: theme.palette.text.secondary,
+      padding: '0 16px 16px 40px',
+      fontWeight: 500,
+    },
+    detailsGrid: {
+      padding: '0 16px',
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      rowGap: '4px',
+      columnGap: '12px',
+      fontSize: '0.8rem',
+    },
+    label: { color: theme.palette.text.disabled },
+    value: { color: theme.palette.text.primary, fontWeight: 600 },
+    progressSection: { padding: '16px' },
+    progressHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginBottom: '6px',
+      '& span': { fontSize: '0.75rem', color: theme.palette.text.disabled, fontWeight: 600 },
+    },
+    progressBar: { height: 6, borderRadius: 3 },
+    cardActions: {
+      display: 'flex',
+      borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`,
+      '& button': {
+        flex: 1,
+        textTransform: 'none',
+        color: theme.palette.text.secondary,
+        fontSize: '0.8rem',
+        padding: '8px',
+      },
+    },
+    summaryBadge: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '10px 16px',
+      borderRadius: 12,
+      background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
+      backdropFilter: 'blur(8px)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      fontSize: '0.85rem',
+      fontWeight: 600,
+    },
+  };
+});
 
 const TYPE_LABELS = {
   totalDistance: 'Distance totale',
@@ -233,16 +237,24 @@ const currentValueForType = (type, position) => {
   return 0;
 };
 
-const CardSkeleton = () => (
-  <Box sx={{ width: 'calc(25% - 15px)', flexShrink: 0 }}>
-    <Box sx={{ borderRadius: '12px', p: 2, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}>
-      <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-      <Skeleton variant="text" width="40%" height={18} sx={{ mb: 1, bgcolor: 'rgba(255,255,255,0.08)' }} />
-      <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1, mb: 1, bgcolor: 'rgba(255,255,255,0.08)' }} />
-      <Skeleton variant="rectangular" height={8} sx={{ borderRadius: 1, bgcolor: 'rgba(255,255,255,0.08)' }} />
+const CardSkeleton = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  return (
+    <Box sx={{ width: 'calc(25% - 15px)', flexShrink: 0 }}>
+      <Box sx={{
+        borderRadius: '12px', p: 2,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+        background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+      }}>
+        <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+        <Skeleton variant="text" width="40%" height={18} sx={{ mb: 1, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+        <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1, mb: 1, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+        <Skeleton variant="rectangular" height={8} sx={{ borderRadius: 1, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 const EDITABLE_TYPES = [
   { key: 'totalDistance', label: 'Distance totale (km)' },
@@ -252,28 +264,31 @@ const EDITABLE_TYPES = [
   { key: 'deviceTime', label: 'Date appareil (date)' },
 ];
 
-const darkDialog = {
-  borderRadius: '20px',
-  background: 'rgba(10,15,30,0.97)',
-  backdropFilter: 'blur(24px)',
-  border: '1px solid rgba(255,255,255,0.1)',
-};
-
-const darkInput = {
-  '& .MuiOutlinedInput-root': {
-    background: 'rgba(255,255,255,0.06)', color: '#f1f5f9',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-    '&.Mui-focused fieldset': { borderColor: '#6366f1' },
-  },
-  '& .MuiInputLabel-root': { color: '#475569' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
-  '& .MuiSelect-select': { color: '#f1f5f9' },
-};
-
 const MaintenanceDialog = ({ open, onClose, onSave, devices, editItem }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const isEdit = !!editItem;
   const [form, setForm] = useState({ name: '', type: 'totalDistance', start: '', period: '', deviceId: '' });
+
+  const dialogSx = {
+    borderRadius: '20px',
+    background: isDark ? 'rgba(10,15,30,0.97)' : theme.palette.background.paper,
+    backdropFilter: 'blur(24px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+  };
+
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+      color: theme.palette.text.primary,
+      '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider },
+      '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+    },
+    '& .MuiInputLabel-root': { color: theme.palette.text.disabled },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
+    '& .MuiSelect-select': { color: theme.palette.text.primary },
+  };
 
   useEffect(() => {
     if (editItem) {
@@ -302,35 +317,35 @@ const MaintenanceDialog = ({ open, onClose, onSave, devices, editItem }) => {
   const periodLabel = isTimeType ? 'Durée (jours)' : (form.type === 'hours' || form.type === 'drivingTime') ? 'Période (heures)' : 'Période (km)';
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: darkDialog }}>
-      <DialogTitle sx={{ fontWeight: 800, fontSize: '1.1rem', pb: 1, color: '#f1f5f9' }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: dialogSx }}>
+      <DialogTitle sx={{ fontWeight: 800, fontSize: '1.1rem', pb: 1, color: theme.palette.text.primary }}>
         {isEdit ? 'Modifier la maintenance' : 'Créer une maintenance'}
-        <IconButton onClick={onClose} size="small" sx={{ position: 'absolute', right: 12, top: 12, color: '#94a3b8' }}>
+        <IconButton onClick={onClose} size="small" sx={{ position: 'absolute', right: 12, top: 12, color: theme.palette.text.secondary }}>
           <Close fontSize="small" />
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '12px !important' }}>
-        <TextField label="Nom" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} fullWidth size="small" sx={darkInput} />
-        <FormControl fullWidth size="small" sx={darkInput}>
+        <TextField label="Nom" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} fullWidth size="small" sx={inputSx} />
+        <FormControl fullWidth size="small" sx={inputSx}>
           <InputLabel>Type</InputLabel>
           <Select label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value, start: '', period: '' })}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' }, '& .MuiSvgIcon-root': { color: '#475569' } }}>
+            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider }, '& .MuiSvgIcon-root': { color: theme.palette.text.disabled } }}>
             {EDITABLE_TYPES.map((t) => <MenuItem key={t.key} value={t.key}>{t.label}</MenuItem>)}
           </Select>
         </FormControl>
-        <TextField label={startLabel} type={isTimeType ? 'date' : 'number'} value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} fullWidth size="small" sx={darkInput} InputLabelProps={isTimeType ? { shrink: true } : undefined} />
-        <TextField label={periodLabel} type="number" value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })} fullWidth size="small" sx={darkInput} />
-        <FormControl fullWidth size="small" sx={darkInput}>
+        <TextField label={startLabel} type={isTimeType ? 'date' : 'number'} value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} fullWidth size="small" sx={inputSx} InputLabelProps={isTimeType ? { shrink: true } : undefined} />
+        <TextField label={periodLabel} type="number" value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })} fullWidth size="small" sx={inputSx} />
+        <FormControl fullWidth size="small" sx={inputSx}>
           <InputLabel>Véhicule (optionnel)</InputLabel>
           <Select label="Véhicule (optionnel)" value={form.deviceId} onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' }, '& .MuiSvgIcon-root': { color: '#475569' } }}>
-            <MenuItem value=""><em style={{ color: '#475569' }}>Aucun</em></MenuItem>
+            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider }, '& .MuiSvgIcon-root': { color: theme.palette.text.disabled } }}>
+            <MenuItem value=""><em style={{ color: theme.palette.text.disabled }}>Aucun</em></MenuItem>
             {devices.map((d) => <MenuItem key={d.id} value={d.id}>{d.name || d.uniqueId}</MenuItem>)}
           </Select>
         </FormControl>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#94a3b8' }}>Annuler</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none', color: theme.palette.text.secondary }}>Annuler</Button>
         <Button onClick={handleSave} variant="contained" disabled={!form.name || !form.type || !form.start || !form.period}
           sx={{ textTransform: 'none', bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' }, borderRadius: 2 }}>
           {isEdit ? 'Enregistrer' : 'Créer'}
@@ -340,21 +355,33 @@ const MaintenanceDialog = ({ open, onClose, onSave, devices, editItem }) => {
   );
 };
 
-const DeleteDialog = ({ open, onClose, onConfirm, name }) => (
-  <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: darkDialog }}>
-    <DialogTitle sx={{ fontWeight: 700, color: '#f1f5f9' }}>Supprimer la maintenance</DialogTitle>
-    <DialogContent>
-      <Typography sx={{ color: '#e2e8f0' }}>Voulez-vous vraiment supprimer <strong style={{ color: '#f1f5f9' }}>{name}</strong> ?</Typography>
-    </DialogContent>
-    <DialogActions sx={{ px: 3, pb: 2 }}>
-      <Button onClick={onClose} sx={{ textTransform: 'none', color: '#94a3b8' }}>Annuler</Button>
-      <Button onClick={onConfirm} variant="contained" sx={{ textTransform: 'none', bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, borderRadius: 2 }}>Supprimer</Button>
-    </DialogActions>
-  </Dialog>
-);
+const DeleteDialog = ({ open, onClose, onConfirm, name }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const dialogSx = {
+    borderRadius: '20px',
+    background: isDark ? 'rgba(10,15,30,0.97)' : theme.palette.background.paper,
+    backdropFilter: 'blur(24px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+  };
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: dialogSx }}>
+      <DialogTitle sx={{ fontWeight: 700, color: theme.palette.text.primary }}>Supprimer la maintenance</DialogTitle>
+      <DialogContent>
+        <Typography sx={{ color: theme.palette.text.primary }}>Voulez-vous vraiment supprimer <strong style={{ color: theme.palette.text.primary }}>{name}</strong> ?</Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} sx={{ textTransform: 'none', color: theme.palette.text.secondary }}>Annuler</Button>
+        <Button onClick={onConfirm} variant="contained" sx={{ textTransform: 'none', bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, borderRadius: 2 }}>Supprimer</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const MaintenanceDashboard = () => {
   const { classes, cx } = useStyles();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [maintenances, setMaintenances] = useState([]);
@@ -506,8 +533,12 @@ const MaintenanceDashboard = () => {
           </Box>
           <Tooltip title="Actualiser">
             <IconButton onClick={fetchAll} disabled={loading}
-              sx={{ bgcolor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-              <Refresh sx={{ color: loading ? '#475569' : '#10b981' }} />
+              sx={{
+                bgcolor: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+                '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.action.selected },
+              }}>
+              <Refresh sx={{ color: loading ? theme.palette.text.disabled : '#10b981' }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -517,17 +548,17 @@ const MaintenanceDashboard = () => {
             <Box className={classes.summaryBadge}>
               <WarningAmberOutlined sx={{ color: '#ef4444', fontSize: 18 }} />
               <span style={{ color: '#ef4444' }}>{countExpired}</span>
-              <span style={{ color: '#94a3b8', fontWeight: 400 }}>Expirées</span>
+              <span style={{ color: theme.palette.text.secondary, fontWeight: 400 }}>Expirées</span>
             </Box>
             <Box className={classes.summaryBadge}>
               <WarningAmberOutlined sx={{ color: '#f59e0b', fontSize: 18 }} />
               <span style={{ color: '#f59e0b' }}>{countUrgent}</span>
-              <span style={{ color: '#94a3b8', fontWeight: 400 }}>Urgentes (&gt;75%)</span>
+              <span style={{ color: theme.palette.text.secondary, fontWeight: 400 }}>Urgentes (&gt;75%)</span>
             </Box>
             <Box className={classes.summaryBadge}>
               <CheckCircleOutlineOutlined sx={{ color: '#10b981', fontSize: 18 }} />
               <span style={{ color: '#10b981' }}>{countOk}</span>
-              <span style={{ color: '#94a3b8', fontWeight: 400 }}>En cours</span>
+              <span style={{ color: theme.palette.text.secondary, fontWeight: 400 }}>En cours</span>
             </Box>
           </Stack>
         )}
@@ -549,14 +580,14 @@ const MaintenanceDashboard = () => {
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Search sx={{ color: '#475569' }} />
+                      <Search sx={{ color: theme.palette.text.disabled }} />
                     </InputAdornment>
                   ),
                 },
               }}
             />
             {[
-              { key: FILTER_ALL, Icon: Layers, title: 'Tout', color: '#94a3b8' },
+              { key: FILTER_ALL, Icon: Layers, title: 'Tout', color: theme.palette.text.secondary },
               { key: FILTER_EXPIRED, Icon: MedicalServicesOutlined, title: 'Expirées', color: '#ef4444' },
               { key: FILTER_URGENT, Icon: Waves, title: 'Urgentes', color: '#f59e0b' },
               { key: FILTER_UPCOMING, Icon: BuildOutlined, title: 'En cours', color: '#10b981' },
@@ -579,7 +610,7 @@ const MaintenanceDashboard = () => {
             [...Array(8)].map((_, i) => <CardSkeleton key={i} />)
           ) : filtered.length === 0 ? (
             <Box sx={{ width: '100%', textAlign: 'center', py: 8 }}>
-              <Typography sx={{ color: '#94a3b8', fontSize: '0.95rem' }}>Aucune maintenance trouvée</Typography>
+              <Typography sx={{ color: theme.palette.text.secondary, fontSize: '0.95rem' }}>Aucune maintenance trouvée</Typography>
             </Box>
           ) : (
             filtered.map((item) => {
@@ -609,10 +640,10 @@ const MaintenanceDashboard = () => {
                     <Box className={classes.progressSection}>
                       <Box className={classes.progressHeader}>
                         <span>Progrès</span>
-                        <span style={{ color: '#e2e8f0' }}>{item.progress}%</span>
+                        <span style={{ color: theme.palette.text.primary }}>{item.progress}%</span>
                       </Box>
                       <LinearProgress variant="determinate" value={item.progress} className={classes.progressBar}
-                        sx={{ bgcolor: 'rgba(255,255,255,0.08)', '& .MuiLinearProgress-bar': { bgcolor: colors.bar } }} />
+                        sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.08)' : theme.palette.action.disabledBackground, '& .MuiLinearProgress-bar': { bgcolor: colors.bar } }} />
                     </Box>
                     <Box className={classes.cardActions}>
                       <Button startIcon={<Edit sx={{ fontSize: 16 }} />} onClick={() => { setEditItem(item); setDialogOpen(true); }}>Modifier</Button>

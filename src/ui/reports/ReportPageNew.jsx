@@ -5,6 +5,7 @@ import {
   TextField, Stack, FormControl, InputLabel,
   IconButton, Autocomplete,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   FileDownload, CalendarToday, ArrowBack, KeyboardArrowDown,
 } from '@mui/icons-material';
@@ -14,28 +15,6 @@ import dayjs from 'dayjs';
 import CarReport from './CarReport';
 import CompleteReport from './CompleteReport';
 import { useNavigate } from 'react-router-dom';
-
-const PAGE_BG = '#080d1a';
-const GLASS = {
-  background: 'rgba(255,255,255,0.05)',
-  backdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '14px',
-};
-
-const DARK_INPUT_SX = {
-  '& .MuiOutlinedInput-root': {
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '10px',
-    color: '#f1f5f9',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-    '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
-  },
-  '& .MuiInputLabel-root': { color: '#94a3b8' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
-  '& .MuiSelect-icon': { color: '#94a3b8' },
-};
 
 const REPORT_OPTIONS = [
   { value: 'complete', label: 'Rapport Complet', sub: "Activité complète avec tous les champs" },
@@ -76,6 +55,8 @@ const getDateRange = (period, customFrom, customTo) => {
 const ReportPageNew = () => {
   const t = useTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const devices = useSelector((state) => state.devices.items);
   const storeDeviceId = useSelector((state) => state.devices.selectedId);
 
@@ -84,6 +65,39 @@ const ReportPageNew = () => {
   const [period, setPeriod] = useState('today');
   const [customFrom, setCustomFrom] = useState(dayjs().startOf('day').format('YYYY-MM-DDTHH:mm'));
   const [customTo, setCustomTo] = useState(dayjs().endOf('day').format('YYYY-MM-DDTHH:mm'));
+
+  const glass = {
+    background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.background.paper,
+    backdropFilter: 'blur(16px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+    borderRadius: '14px',
+  };
+
+  const darkInputSx = {
+    '& .MuiOutlinedInput-root': {
+      background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
+      borderRadius: '10px',
+      color: theme.palette.text.primary,
+      '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider },
+      '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
+      '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
+    },
+    '& .MuiInputLabel-root': { color: theme.palette.text.secondary },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#6366f1' },
+    '& .MuiSelect-icon': { color: theme.palette.text.secondary },
+  };
+
+  const menuPaperSx = {
+    background: isDark ? 'rgba(10,15,30,0.97)' : theme.palette.background.paper,
+    backdropFilter: 'blur(24px)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+    borderRadius: '12px',
+    '& .MuiMenuItem-root': {
+      color: theme.palette.text.secondary,
+      '&:hover': { bgcolor: theme.palette.action.hover, color: theme.palette.text.primary },
+      '&.Mui-selected': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' },
+    },
+  };
 
   const dateRange = getDateRange(period, customFrom, customTo);
   const dateLabel = `${dayjs(dateRange.from).format('DD MMM YYYY, HH:mm')} — ${dayjs(dateRange.to).format('DD MMM YYYY, HH:mm')}`;
@@ -103,7 +117,7 @@ const ReportPageNew = () => {
     <PageLayout>
       <Box sx={{
         width: '100%', flex: 1, boxSizing: 'border-box',
-        padding: 3, background: PAGE_BG,
+        padding: 3, background: theme.palette.background.default,
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
       }}>
         {/* ── Header ── */}
@@ -112,15 +126,15 @@ const ReportPageNew = () => {
             <IconButton
               onClick={() => navigate(-1)}
               sx={{
-                ...GLASS, borderRadius: '10px', color: '#94a3b8',
-                '&:hover': { background: 'rgba(255,255,255,0.1)', color: '#f1f5f9' },
+                ...glass, borderRadius: '10px', color: theme.palette.text.secondary,
+                '&:hover': { background: isDark ? 'rgba(255,255,255,0.1)' : theme.palette.action.selected, color: theme.palette.text.primary },
               }}
             >
               <ArrowBack fontSize="small" />
             </IconButton>
             <Box>
-              <Typography sx={{ fontSize: '1.2rem', fontWeight: 800, color: '#f1f5f9' }}>Rapports</Typography>
-              <Typography sx={{ fontSize: '0.78rem', color: '#475569' }}>Analyses et informations sur votre flotte</Typography>
+              <Typography sx={{ fontSize: '1.2rem', fontWeight: 800, color: theme.palette.text.primary }}>Rapports</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: theme.palette.text.disabled }}>Analyses et informations sur votre flotte</Typography>
             </Box>
           </Box>
 
@@ -131,9 +145,9 @@ const ReportPageNew = () => {
               onClick={handleExportExcel}
               disabled={!deviceId}
               sx={{
-                ...GLASS, textTransform: 'none', fontWeight: 600,
-                fontSize: '0.82rem', color: '#94a3b8', px: 2, py: 0.75,
-                '&:hover': { background: 'rgba(255,255,255,0.09)', color: '#f1f5f9' },
+                ...glass, textTransform: 'none', fontWeight: 600,
+                fontSize: '0.82rem', color: theme.palette.text.secondary, px: 2, py: 0.75,
+                '&:hover': { background: isDark ? 'rgba(255,255,255,0.09)' : theme.palette.action.selected, color: theme.palette.text.primary },
                 '&.Mui-disabled': { opacity: 0.4 },
               }}
             >
@@ -158,32 +172,24 @@ const ReportPageNew = () => {
 
         {/* ── Filter bar ── */}
         <Box sx={{
-          ...GLASS, p: 2, mb: 3,
+          ...glass, p: 2, mb: 3,
           display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap',
         }}>
           {/* Report type */}
-          <FormControl size="small" sx={{ minWidth: 220, ...DARK_INPUT_SX }}>
+          <FormControl size="small" sx={{ minWidth: 220, ...darkInputSx }}>
             <InputLabel>Type de rapport</InputLabel>
             <Select
               value={reportType}
               label="Type de rapport"
               onChange={(e) => setReportType(e.target.value)}
               IconComponent={KeyboardArrowDown}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
-                    '& .MuiMenuItem-root': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: '#f1f5f9' }, '&.Mui-selected': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
-                  },
-                },
-              }}
+              MenuProps={{ PaperProps: { sx: menuPaperSx } }}
             >
               {REPORT_OPTIONS.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value} sx={{ py: 1.25 }}>
                   <Box>
                     <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{opt.label}</Typography>
-                    <Typography sx={{ fontSize: '0.73rem', color: '#475569', mt: 0.2 }}>{opt.sub}</Typography>
+                    <Typography sx={{ fontSize: '0.73rem', color: theme.palette.text.disabled, mt: 0.2 }}>{opt.sub}</Typography>
                   </Box>
                 </MenuItem>
               ))}
@@ -200,39 +206,27 @@ const ReportPageNew = () => {
             sx={{ minWidth: 220 }}
             slotProps={{
               paper: {
-                sx: {
-                  background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
-                  '& .MuiAutocomplete-option': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' }, '&[aria-selected="true"]': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
-                },
+                sx: menuPaperSx,
               },
             }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Véhicule"
-                sx={DARK_INPUT_SX}
+                sx={darkInputSx}
               />
             )}
           />
 
           {/* Period */}
-          <FormControl size="small" sx={{ minWidth: 180, ...DARK_INPUT_SX }}>
+          <FormControl size="small" sx={{ minWidth: 180, ...darkInputSx }}>
             <InputLabel>{t('reportPeriod')}</InputLabel>
             <Select
               value={period}
               label={t('reportPeriod')}
               onChange={(e) => setPeriod(e.target.value)}
               IconComponent={KeyboardArrowDown}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(24px)',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
-                    '& .MuiMenuItem-root': { color: '#94a3b8', '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: '#f1f5f9' }, '&.Mui-selected': { bgcolor: 'rgba(99,102,241,0.15)', color: '#818cf8' } },
-                  },
-                },
-              }}
+              MenuProps={{ PaperProps: { sx: menuPaperSx } }}
             >
               {PERIOD_OPTIONS.map((o) => (
                 <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
@@ -244,12 +238,12 @@ const ReportPageNew = () => {
           {period !== 'custom' ? (
             <Box sx={{
               display: 'flex', alignItems: 'center', gap: 1,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
               borderRadius: '10px', px: 2, py: '7px', minWidth: 260,
             }}>
-              <CalendarToday sx={{ fontSize: 14, color: '#475569' }} />
-              <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{dateLabel}</Typography>
+              <CalendarToday sx={{ fontSize: 14, color: theme.palette.text.disabled }} />
+              <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary, fontWeight: 500 }}>{dateLabel}</Typography>
             </Box>
           ) : (
             <>
@@ -259,7 +253,7 @@ const ReportPageNew = () => {
                 label={t('reportFrom')}
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                sx={{ minWidth: 240, ...DARK_INPUT_SX }}
+                sx={{ minWidth: 240, ...darkInputSx }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
               <TextField
@@ -268,7 +262,7 @@ const ReportPageNew = () => {
                 label={t('reportTo')}
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                sx={{ minWidth: 240, ...DARK_INPUT_SX }}
+                sx={{ minWidth: 240, ...darkInputSx }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
             </>
@@ -287,7 +281,12 @@ const ReportPageNew = () => {
                 transition: 'all 0.15s ease',
                 ...(reportType === opt.value
                   ? { background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', color: '#818cf8' }
-                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#475569', '&:hover': { border: '1px solid rgba(255,255,255,0.15)', color: '#94a3b8' } }
+                  : {
+                    background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
+                    color: theme.palette.text.disabled,
+                    '&:hover': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.15)' : theme.palette.divider}`, color: theme.palette.text.secondary },
+                  }
                 ),
               }}
             >
@@ -301,7 +300,7 @@ const ReportPageNew = () => {
         {reportType === 'complete' && <CompleteReport {...childProps} />}
         {reportType !== 'summary' && reportType !== 'complete' && (
           <Box sx={{
-            ...GLASS, p: 8, textAlign: 'center',
+            ...glass, p: 8, textAlign: 'center',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           }}>
             <Box sx={{
@@ -311,10 +310,10 @@ const ReportPageNew = () => {
             }}>
               <CalendarToday sx={{ fontSize: 28, color: '#6366f1' }} />
             </Box>
-            <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '1rem' }}>
+            <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '1rem' }}>
               {REPORT_OPTIONS.find((o) => o.value === reportType)?.label}
             </Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: '#475569' }}>
+            <Typography sx={{ fontSize: '0.85rem', color: theme.palette.text.disabled }}>
               Ce rapport sera disponible prochainement.
             </Typography>
           </Box>

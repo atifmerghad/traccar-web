@@ -12,6 +12,7 @@ import {
   TextField,
   Chip,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
 import {
   PlayArrow,
@@ -80,135 +81,140 @@ const getPeriodRange = (period) => {
   }
 };
 
-const DARK_MENU = {
-  PaperProps: {
-    sx: {
-      background: '#0f172a',
-      border: '1px solid rgba(255,255,255,0.1)',
-      borderRadius: '12px',
-      mt: 0.5,
-      '& .MuiMenuItem-root': { color: '#cbd5e1', fontSize: '0.86rem', py: 0.9 },
-      '& .MuiMenuItem-root:hover': { background: 'rgba(255,255,255,0.06)' },
-      '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
-    },
-  },
-};
-
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const useStyles = makeStyles()(() => ({
-  root: { height: '100%', position: 'relative', overflow: 'hidden', background: '#080d1a' },
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    root: { height: '100%', position: 'relative', overflow: 'hidden', background: theme.palette.background.default },
 
-  sidebar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 380,
-    background: 'rgba(8,13,26,0.97)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderRight: '1px solid rgba(255,255,255,0.08)',
-    zIndex: 1000,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
-  },
+    sidebar: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 380,
+      background: isDark ? 'rgba(8,13,26,0.97)' : 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
+    },
 
-  sidebarHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '14px 18px',
-    borderBottom: '1px solid rgba(255,255,255,0.07)',
-    flexShrink: 0,
-  },
+    sidebarHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '14px 18px',
+      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
+      flexShrink: 0,
+    },
 
-  scrollArea: {
-    flex: 1,
-    overflowY: 'auto',
-    scrollbarWidth: 'thin',
-    scrollbarColor: 'rgba(255,255,255,0.1) transparent',
-    '&::-webkit-scrollbar': { width: 4 },
-    '&::-webkit-scrollbar-track': { background: 'transparent' },
-    '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: 4 },
-  },
+    scrollArea: {
+      flex: 1,
+      overflowY: 'auto',
+      scrollbarWidth: 'thin',
+      scrollbarColor: `${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} transparent`,
+      '&::-webkit-scrollbar': { width: 4 },
+      '&::-webkit-scrollbar-track': { background: 'transparent' },
+      '&::-webkit-scrollbar-thumb': { background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', borderRadius: 4 },
+    },
 
-  glassSelect: {
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '10px',
-    color: '#e2e8f0',
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
-    '& .MuiSelect-select': { fontWeight: 600, fontSize: '0.84rem' },
-    '& .MuiSvgIcon-root': { color: '#475569' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-  },
-
-  dateInput: {
-    '& .MuiOutlinedInput-root': {
-      background: 'rgba(255,255,255,0.05)',
+    glassSelect: {
+      background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
       borderRadius: '10px',
-      color: '#e2e8f0',
-      fontSize: '0.82rem',
-      '& fieldset': { border: '1px solid rgba(255,255,255,0.1)' },
-      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-      '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+      color: theme.palette.text.primary,
+      '& .MuiOutlinedInput-notchedOutline': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}` },
+      '& .MuiSelect-select': { fontWeight: 600, fontSize: '0.84rem' },
+      '& .MuiSvgIcon-root': { color: theme.palette.text.disabled },
+      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
     },
-    '& input': { color: '#e2e8f0', fontSize: '0.82rem' },
-    '& input::-webkit-calendar-picker-indicator': { filter: 'invert(0.55)', cursor: 'pointer' },
-  },
 
-  slider: {
-    color: '#6366f1',
-    '& .MuiSlider-thumb': {
-      width: 14,
-      height: 14,
-      boxShadow: '0 0 0 4px rgba(99,102,241,0.2)',
+    dateInput: {
+      '& .MuiOutlinedInput-root': {
+        background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
+        borderRadius: '10px',
+        color: theme.palette.text.primary,
+        fontSize: '0.82rem',
+        '& fieldset': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}` },
+        '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
+        '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+      },
+      '& input': { color: theme.palette.text.primary, fontSize: '0.82rem' },
+      '& input::-webkit-calendar-picker-indicator': { filter: 'invert(0.55)', cursor: 'pointer' },
     },
-    '& .MuiSlider-track': { height: 4 },
-    '& .MuiSlider-rail': { height: 4, opacity: 0.2 },
-  },
 
-  ctrlBtn: {
-    color: '#94a3b8',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '10px !important',
-    width: 36,
-    height: 36,
-    '&:hover': { background: 'rgba(255,255,255,0.06)', color: '#e2e8f0' },
-    '&.Mui-disabled': { opacity: 0.3 },
-  },
+    slider: {
+      color: '#6366f1',
+      '& .MuiSlider-thumb': {
+        width: 14,
+        height: 14,
+        boxShadow: '0 0 0 4px rgba(99,102,241,0.2)',
+      },
+      '& .MuiSlider-track': { height: 4 },
+      '& .MuiSlider-rail': { height: 4, opacity: 0.2 },
+    },
 
-  playBtn: {
-    background: '#6366f1',
-    color: '#fff',
-    borderRadius: '50%',
-    width: 44,
-    height: 44,
-    '&:hover': { background: '#4f46e5' },
-    '&.Mui-disabled': { background: 'rgba(99,102,241,0.25)', color: 'rgba(255,255,255,0.3)' },
-  },
+    ctrlBtn: {
+      color: theme.palette.text.secondary,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
+      borderRadius: '10px !important',
+      width: 36,
+      height: 36,
+      '&:hover': { background: theme.palette.action.hover, color: theme.palette.text.primary },
+      '&.Mui-disabled': { opacity: 0.3 },
+    },
 
-  activityItem: {
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.06)',
-    background: 'rgba(255,255,255,0.03)',
-    padding: '12px 14px',
-    marginBottom: '8px',
-    transition: 'border-color 0.15s',
-    '&:hover': { borderColor: 'rgba(255,255,255,0.12)' },
-    cursor: 'default',
-  },
-}));
+    playBtn: {
+      background: '#6366f1',
+      color: '#fff',
+      borderRadius: '50%',
+      width: 44,
+      height: 44,
+      '&:hover': { background: '#4f46e5' },
+      '&.Mui-disabled': { background: 'rgba(99,102,241,0.25)', color: 'rgba(255,255,255,0.3)' },
+    },
+
+    activityItem: {
+      borderRadius: '12px',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`,
+      background: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
+      padding: '12px 14px',
+      marginBottom: '8px',
+      transition: 'border-color 0.15s',
+      '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.12)' : theme.palette.divider },
+      cursor: 'default',
+    },
+  };
+});
 
 // ─── ReplayPageNew ────────────────────────────────────────────────────────────
 
 const ReplayPageNew = () => {
   const { classes } = useStyles();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const timerRef = useRef();
   const [searchParams] = useSearchParams();
+
+  const darkMenu = {
+    PaperProps: {
+      sx: {
+        background: isDark ? '#0f172a' : theme.palette.background.paper,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+        borderRadius: '12px',
+        mt: 0.5,
+        '& .MuiMenuItem-root': { color: theme.palette.text.secondary, fontSize: '0.86rem', py: 0.9 },
+        '& .MuiMenuItem-root:hover': { background: theme.palette.action.hover },
+        '& .MuiMenuItem-root.Mui-selected': { background: 'rgba(99,102,241,0.15)', color: '#a5b4fc' },
+      },
+    },
+  };
 
   // Redux
   const reduxDefaultId = useSelector((state) => state.devices.selectedId);
@@ -385,12 +391,12 @@ const ReplayPageNew = () => {
         <Box className={classes.sidebarHeader}>
           <Box sx={{ flex: 1 }}>
             <Typography
-              sx={{ fontWeight: 800, color: '#f1f5f9', fontSize: '0.95rem', lineHeight: 1.2 }}
+              sx={{ fontWeight: 800, color: theme.palette.text.primary, fontSize: '0.95rem', lineHeight: 1.2 }}
             >
               Historique du véhicule
             </Typography>
             {loaded && deviceName && (
-              <Typography sx={{ fontSize: '0.72rem', color: '#475569', mt: 0.3 }}>
+              <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled, mt: 0.3 }}>
                 {deviceName}
               </Typography>
             )}
@@ -399,7 +405,7 @@ const ReplayPageNew = () => {
             <IconButton
               onClick={handleDownload}
               size="small"
-              sx={{ color: '#64748b', '&:hover': { color: '#a5b4fc' } }}
+              sx={{ color: theme.palette.text.disabled, '&:hover': { color: '#a5b4fc' } }}
             >
               <FileDownload sx={{ fontSize: 18 }} />
             </IconButton>
@@ -408,7 +414,7 @@ const ReplayPageNew = () => {
             <IconButton
               onClick={handleReset}
               size="small"
-              sx={{ color: '#64748b', '&:hover': { color: '#f97316' } }}
+              sx={{ color: theme.palette.text.disabled, '&:hover': { color: '#f97316' } }}
             >
               <Refresh sx={{ fontSize: 18 }} />
             </IconButton>
@@ -416,7 +422,7 @@ const ReplayPageNew = () => {
           <IconButton
             onClick={() => navigate(-1)}
             size="small"
-            sx={{ color: '#64748b', '&:hover': { color: '#ef4444' } }}
+            sx={{ color: theme.palette.text.disabled, '&:hover': { color: '#ef4444' } }}
           >
             <Close sx={{ fontSize: 18 }} />
           </IconButton>
@@ -438,12 +444,12 @@ const ReplayPageNew = () => {
                     fontSize: '0.76rem',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    color: activePeriod === p.value ? '#a5b4fc' : '#64748b',
+                    color: activePeriod === p.value ? '#a5b4fc' : theme.palette.text.disabled,
                     borderColor:
-                      activePeriod === p.value ? 'rgba(99,102,241,0.45)' : 'rgba(255,255,255,0.1)',
+                      activePeriod === p.value ? 'rgba(99,102,241,0.45)' : theme.palette.divider,
                     background: activePeriod === p.value ? 'rgba(99,102,241,0.15)' : 'transparent',
                     border: '1px solid',
-                    '&:hover': { borderColor: 'rgba(255,255,255,0.25)' },
+                    '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.25)' : theme.palette.divider },
                   }}
                 />
               ))}
@@ -453,7 +459,7 @@ const ReplayPageNew = () => {
             <Typography
               sx={{
                 fontSize: '0.7rem',
-                color: '#475569',
+                color: theme.palette.text.disabled,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 mb: 0.8,
@@ -469,14 +475,14 @@ const ReplayPageNew = () => {
               size="small"
               fullWidth
               displayEmpty
-              MenuProps={DARK_MENU}
+              MenuProps={darkMenu}
               startAdornment={
                 <DirectionsCar sx={{ fontSize: 16, color: '#6366f1', ml: 0.5, mr: -0.5 }} />
               }
               sx={{ mb: 2 }}
             >
               <MenuItem disabled value="">
-                <em style={{ color: '#64748b' }}>Sélectionnez un véhicule...</em>
+                <em style={{ color: theme.palette.text.disabled }}>Sélectionnez un véhicule...</em>
               </MenuItem>
               {reduxDevices.map((dev) => (
                 <MenuItem key={dev.id} value={dev.id}>
@@ -489,7 +495,7 @@ const ReplayPageNew = () => {
             <Typography
               sx={{
                 fontSize: '0.7rem',
-                color: '#475569',
+                color: theme.palette.text.disabled,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 mb: 0.8,
@@ -511,7 +517,7 @@ const ReplayPageNew = () => {
                 slotProps={{
                   input: {
                     startAdornment: (
-                      <CalendarToday sx={{ fontSize: 14, color: '#475569', mr: 1 }} />
+                      <CalendarToday sx={{ fontSize: 14, color: theme.palette.text.disabled, mr: 1 }} />
                     ),
                   },
                 }}
@@ -581,16 +587,16 @@ const ReplayPageNew = () => {
                 mb: 1,
                 px: 2,
                 py: 1,
-                background: 'rgba(255,255,255,0.03)',
+                background: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
                 borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : theme.palette.divider}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
               }}
             >
               <CalendarToday sx={{ fontSize: 14, color: '#6366f1' }} />
-              <Typography sx={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+              <Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary, fontWeight: 500 }}>
                 {dayjs(positions[0]?.fixTime).format('DD MMM YYYY HH:mm')}
                 {' — '}
                 {dayjs(positions[positions.length - 1]?.fixTime).format('DD MMM YYYY HH:mm')}
@@ -600,13 +606,13 @@ const ReplayPageNew = () => {
             {/* Timeline */}
             <Box sx={{ px: 2, mb: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.secondary, fontFamily: 'monospace' }}>
                   {currentPos ? formatTime(currentPos.fixTime, 'seconds') : '—'}
                 </Typography>
-                <Typography sx={{ fontSize: '0.7rem', color: '#475569' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled }}>
                   {index + 1} / {positions.length}
                 </Typography>
-                <Typography sx={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: theme.palette.text.secondary, fontFamily: 'monospace' }}>
                   {positions.length > 0
                     ? formatTime(positions[positions.length - 1].fixTime, 'seconds')
                     : '—'}
@@ -631,7 +637,7 @@ const ReplayPageNew = () => {
                 onChange={(e) => setPlaybackSpeed(e.target.value)}
                 size="small"
                 className={classes.glassSelect}
-                MenuProps={DARK_MENU}
+                MenuProps={darkMenu}
                 IconComponent={KeyboardArrowDown}
                 sx={{ minWidth: 72 }}
               >
@@ -698,8 +704,8 @@ const ReplayPageNew = () => {
               {/* Speed badge */}
               <Box
                 sx={{
-                  background: currentSpeed > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${currentSpeed > 0 ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                  background: currentSpeed > 0 ? 'rgba(245,158,11,0.12)' : theme.palette.action.hover,
+                  border: `1px solid ${currentSpeed > 0 ? 'rgba(245,158,11,0.3)' : theme.palette.divider}`,
                   borderRadius: '10px',
                   minWidth: 64,
                   px: 1,
@@ -712,22 +718,22 @@ const ReplayPageNew = () => {
                     fontSize: '1.1rem',
                     fontWeight: 900,
                     lineHeight: 1,
-                    color: currentSpeed > 0 ? '#f59e0b' : '#475569',
+                    color: currentSpeed > 0 ? '#f59e0b' : theme.palette.text.disabled,
                   }}
                 >
                   {currentSpeed}
                 </Typography>
-                <Typography sx={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.04em' }}>
+                <Typography sx={{ fontSize: '0.58rem', color: theme.palette.text.disabled, letterSpacing: '0.04em' }}>
                   km/h
                 </Typography>
               </Box>
             </Box>
 
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mx: 2 }} />
+            <Divider sx={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider, mx: 2 }} />
 
             {/* ── Rapport d'activité ── */}
             <Box sx={{ px: 2, pt: 1.5, pb: 1, flexShrink: 0 }}>
-              <Typography sx={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.9rem', mb: 1.5 }}>
+              <Typography sx={{ fontWeight: 700, color: theme.palette.text.primary, fontSize: '0.9rem', mb: 1.5 }}>
                 Rapport d'activité
               </Typography>
 
@@ -759,9 +765,9 @@ const ReplayPageNew = () => {
                       fontSize: '0.74rem',
                       fontWeight: 600,
                       cursor: 'pointer',
-                      color: activityFilter === f.key ? f.color : '#64748b',
+                      color: activityFilter === f.key ? f.color : theme.palette.text.disabled,
                       borderColor:
-                        activityFilter === f.key ? `${f.color}60` : 'rgba(255,255,255,0.08)',
+                        activityFilter === f.key ? `${f.color}60` : theme.palette.divider,
                       background: activityFilter === f.key ? `${f.color}18` : 'transparent',
                       border: '1px solid',
                       '& .MuiChip-icon': { color: 'inherit', ml: 0.5 },
@@ -783,7 +789,7 @@ const ReplayPageNew = () => {
                     <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: s.color }}>
                       {s.value}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.68rem', color: '#334155' }}>
+                    <Typography sx={{ fontSize: '0.68rem', color: theme.palette.text.disabled }}>
                       {s.label}
                     </Typography>
                   </Box>
@@ -791,13 +797,13 @@ const ReplayPageNew = () => {
               </Box>
             </Box>
 
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mx: 2 }} />
+            <Divider sx={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider, mx: 2 }} />
 
             {/* Activity list */}
             <Box className={classes.scrollArea} sx={{ px: 2, py: 1.5 }}>
               {filteredActivity.length === 0 ? (
                 <Typography
-                  sx={{ color: '#334155', fontSize: '0.82rem', textAlign: 'center', py: 3 }}
+                  sx={{ color: theme.palette.text.disabled, fontSize: '0.82rem', textAlign: 'center', py: 3 }}
                 >
                   Aucune activité disponible
                 </Typography>
@@ -842,30 +848,30 @@ const ReplayPageNew = () => {
                             {isTrip ? 'Mouvement' : 'Stationnement'}
                           </Typography>
                         </Box>
-                        <Typography sx={{ fontSize: '0.72rem', color: '#475569', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled, fontWeight: 600 }}>
                           {duration}
                         </Typography>
                       </Box>
 
                       <Box sx={{ display: 'flex', gap: 1.5, mb: 0.6 }}>
                         <Typography
-                          sx={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}
+                          sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled, fontFamily: 'monospace' }}
                         >
                           {startTime}
                         </Typography>
-                        <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>→</Typography>
+                        <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled }}>→</Typography>
                         <Typography
-                          sx={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}
+                          sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled, fontFamily: 'monospace' }}
                         >
                           {endTime}
                         </Typography>
                         {isTrip && item.distance > 0 && (
                           <>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>
+                            <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled }}>
                               ·
                             </Typography>
                             <Typography
-                              sx={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}
+                              sx={{ fontSize: '0.72rem', color: theme.palette.text.secondary, fontWeight: 600 }}
                             >
                               {fmtDist(item.distance)}
                             </Typography>
@@ -873,10 +879,10 @@ const ReplayPageNew = () => {
                         )}
                         {isTrip && item.maxSpeed > 0 && (
                           <>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#334155' }}>
+                            <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.disabled }}>
                               ·
                             </Typography>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+                            <Typography sx={{ fontSize: '0.72rem', color: theme.palette.text.secondary }}>
                               {Math.round(item.maxSpeed * 1.852)} km/h max
                             </Typography>
                           </>
@@ -885,7 +891,7 @@ const ReplayPageNew = () => {
 
                       {(item.startAddress || item.address) && (
                         <Typography
-                          sx={{ fontSize: '0.7rem', color: '#334155', lineHeight: 1.4 }}
+                          sx={{ fontSize: '0.7rem', color: theme.palette.text.disabled, lineHeight: 1.4 }}
                           noWrap
                         >
                           {item.startAddress || item.address}
