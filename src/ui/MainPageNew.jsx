@@ -48,6 +48,10 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     borderRadius: 8,
     overflow: 'hidden',
     boxShadow: '0 2px 24px rgba(0,0,0,0.4)',
+    [theme.breakpoints.down('md')]: {
+      inset: 4,
+      borderRadius: 6,
+    },
   },
   sidebar: {
     position: 'absolute',
@@ -65,6 +69,20 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     border: `1px solid ${theme.palette.divider}`,
     zIndex: 1000,
     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    [theme.breakpoints.down('lg')]: {
+      width: 340,
+    },
+    [theme.breakpoints.down('md')]: {
+      top: 4,
+      left: 4,
+      width: 'min(320px, calc(100% - 8px))',
+      height: 'calc(100% - 8px)',
+      borderRadius: 6,
+    },
+    [theme.breakpoints.down('sm')]: {
+      width: 'calc(100% - 8px)',
+      maxWidth: '100%',
+    },
   },
   vehicleList: {
     flex: 1,
@@ -88,6 +106,12 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     color: theme.palette.text.secondary,
     border: `1px solid ${theme.palette.divider}`,
     boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+    [theme.breakpoints.down('md')]: {
+      top: 8,
+      left: 8,
+      width: 34,
+      height: 34,
+    },
   },
   rightToolbar: {
     position: 'absolute',
@@ -105,9 +129,49 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     borderRadius: 14,
     padding: '10px 7px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    [theme.breakpoints.down('md')]: {
+      top: 'auto',
+      bottom: 10,
+      right: '50%',
+      transform: 'translateX(50%)',
+      flexDirection: 'row',
+      maxWidth: 'calc(100% - 16px)',
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      gap: 4,
+      padding: '6px',
+      borderRadius: 12,
+    },
+    [theme.breakpoints.down('sm')]: {
+      bottom: 8,
+      maxWidth: 'calc(100% - 12px)',
+      padding: '5px',
+      gap: 3,
+    },
   },
-  toolbarDivider: { height: 1, background: theme.palette.divider, margin: '4px 0' },
-  toolbarBtn: { width: 38, height: 38, borderRadius: '10px !important', color: theme.palette.text.secondary },
+  toolbarDivider: {
+    height: 1,
+    background: theme.palette.divider,
+    margin: '4px 0',
+    [theme.breakpoints.down('md')]: {
+      width: 1,
+      height: 26,
+      margin: '0 4px',
+      flexShrink: 0,
+    },
+  },
+  toolbarBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: '10px !important',
+    color: theme.palette.text.secondary,
+    [theme.breakpoints.down('md')]: {
+      width: 34,
+      height: 34,
+      borderRadius: '8px !important',
+      flexShrink: 0,
+    },
+  },
   toolbarBtnActive: { background: '#6366f1 !important', color: '#fff !important' },
   panel: {
     position: 'absolute',
@@ -125,6 +189,21 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    [theme.breakpoints.down('lg')]: {
+      width: 330,
+    },
+    [theme.breakpoints.down('md')]: {
+      top: 4,
+      right: 4,
+      width: 'min(320px, calc(100% - 8px))',
+      height: 'calc(100% - 8px)',
+      borderRadius: 10,
+    },
+    [theme.breakpoints.down('sm')]: {
+      width: 'calc(100% - 8px)',
+      maxWidth: '100%',
+      borderRadius: 8,
+    },
   },
   panelHeader: {
     display: 'flex',
@@ -133,10 +212,20 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     padding: '20px 20px 16px',
     borderBottom: `1px solid ${theme.palette.divider}`,
     flexShrink: 0,
+    [theme.breakpoints.down('sm')]: {
+      padding: '14px 14px 12px',
+    },
   },
   panelTitle: { fontWeight: 800, fontSize: '1.1rem', color: theme.palette.text.primary },
   panelSubtitle: { fontSize: '0.8rem', color: '#6366f1', fontWeight: 600 },
-  panelBody: { flex: 1, overflowY: 'auto', padding: '12px 20px' },
+  panelBody: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '12px 20px',
+    [theme.breakpoints.down('sm')]: {
+      padding: '10px 14px',
+    },
+  },
   panelRow: {
     display: 'flex',
     alignItems: 'center',
@@ -148,7 +237,14 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
   panelRowIcon: { width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   panelRowTitle: { fontWeight: 600, fontSize: '0.9rem', color: theme.palette.text.primary },
   panelRowSub: { fontSize: '0.75rem', color: theme.palette.text.secondary },
-  commandGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
+  commandGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+    [theme.breakpoints.down('sm')]: {
+      gap: 8,
+    },
+  },
   commandBtn: {
     display: 'flex',
     flexDirection: 'column',
@@ -162,7 +258,16 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
     transition: 'all 0.15s ease',
   },
   commandIcon: { width: 50, height: 50, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  mapTypeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 },
+  mapTypeGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+    marginBottom: 20,
+    [theme.breakpoints.down('sm')]: {
+      gap: 8,
+      marginBottom: 14,
+    },
+  },
   mapTypeBtn: {
     display: 'flex',
     flexDirection: 'column',

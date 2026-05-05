@@ -25,6 +25,8 @@ const useStyles = makeStyles()((theme) => {
       flex: 1,
       boxSizing: 'border-box',
       padding: theme.spacing(3),
+      [theme.breakpoints.down('md')]: { padding: theme.spacing(2) },
+      [theme.breakpoints.down('sm')]: { padding: theme.spacing(1.5) },
       background: theme.palette.background.default,
       minHeight: '100vh',
       display: 'flex',
@@ -44,6 +46,10 @@ const useStyles = makeStyles()((theme) => {
       alignItems: 'center',
       gap: '16px',
       borderBottom: `1px solid ${theme.palette.divider}`,
+      [theme.breakpoints.down('sm')]: {
+        padding: '14px 14px',
+        gap: '10px',
+      },
     },
     iconBox: {
       width: 40,
@@ -54,9 +60,9 @@ const useStyles = makeStyles()((theme) => {
       justifyContent: 'center',
       flexShrink: 0,
     },
-    cardTitle: { fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary },
-    cardSubtitle: { color: theme.palette.text.disabled, fontSize: '0.78rem' },
-    cardContent: { padding: '24px' },
+    cardTitle: { fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary, [theme.breakpoints.down('sm')]: { fontSize: '0.88rem' } },
+    cardSubtitle: { color: theme.palette.text.disabled, fontSize: '0.78rem', [theme.breakpoints.down('sm')]: { fontSize: '0.72rem' } },
+    cardContent: { padding: '24px', [theme.breakpoints.down('sm')]: { padding: '14px' } },
     label: {
       fontSize: '0.82rem',
       fontWeight: 600,
@@ -72,7 +78,7 @@ const useStyles = makeStyles()((theme) => {
       borderBottom: `1px solid ${theme.palette.divider}`,
       '&:last-child': { borderBottom: 'none' },
     },
-    detailLabel: { color: theme.palette.text.disabled, fontSize: '0.82rem', width: '80px', flexShrink: 0 },
+    detailLabel: { color: theme.palette.text.disabled, fontSize: '0.82rem', width: '80px', flexShrink: 0, [theme.breakpoints.down('sm')]: { width: '70px', fontSize: '0.76rem' } },
     detailValue: { color: theme.palette.text.primary, fontSize: '0.82rem', fontWeight: 600, wordBreak: 'break-all' },
   };
 });
@@ -192,7 +198,7 @@ const SettingsPage = () => {
     <PageLayout>
       <Box className={classes.root}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, md: 3 } }}>
           <IconButton
             onClick={() => navigate(-1)}
             sx={{
@@ -206,12 +212,12 @@ const SettingsPage = () => {
             <ArrowBack />
           </IconButton>
           <Box>
-            <Typography sx={{ fontSize: '1.25rem', fontWeight: 800, color: 'text.primary' }}>{t('settingsTitle')}</Typography>
+            <Typography sx={{ fontSize: { xs: '1.05rem', md: '1.25rem' }, fontWeight: 800, color: 'text.primary' }}>{t('settingsTitle')}</Typography>
             <Typography sx={{ color: 'text.disabled', fontSize: '0.82rem' }}>{t('sharedPreferences')}</Typography>
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 3, width: '100%', alignItems: 'flex-start' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: { xs: 2, md: 3 }, width: '100%', alignItems: 'flex-start' }}>
           {/* LEFT COLUMN */}
           <Box sx={{ flex: 2, minWidth: 0 }}>
             {/* Vehicle Selection & Edit Card */}
@@ -251,7 +257,7 @@ const SettingsPage = () => {
 
                 {selectedDeviceId && (
                   <Stack spacing={3}>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography className={classes.label}>Nom du véhicule</Typography>
                         <TextField fullWidth value={vehicleData.name} onChange={(e) => setVehicleData({ ...vehicleData, name: e.target.value })} sx={darkInput} />
@@ -288,7 +294,7 @@ const SettingsPage = () => {
                 </Box>
               </Box>
               <Box className={classes.cardContent}>
-                <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, mb: 3 }}>
                   <Box sx={{ flex: 1 }}>
                     <Typography className={classes.label}>Prénom</Typography>
                     <TextField fullWidth value={profileData.firstName} onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })} sx={darkInput} />

@@ -25,6 +25,8 @@ const useStyles = makeStyles()((theme) => {
   return {
     root: {
       padding: '24px',
+      [theme.breakpoints.down('md')]: { padding: '16px' },
+      [theme.breakpoints.down('sm')]: { padding: '12px' },
       background: theme.palette.background.default,
       minHeight: '100vh',
       display: 'flex',
@@ -38,12 +40,14 @@ const useStyles = makeStyles()((theme) => {
       border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
       borderRadius: '18px',
       padding: '20px 24px',
+      [theme.breakpoints.down('sm')]: { padding: '14px 14px' },
     },
     glassSelect: {
       background: isDark ? 'rgba(255,255,255,0.05)' : theme.palette.action.hover,
       borderRadius: '12px',
       color: theme.palette.text.primary,
       minWidth: '200px',
+      [theme.breakpoints.down('sm')]: { minWidth: '100%' },
       '& .MuiOutlinedInput-notchedOutline': { border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}` },
       '& .MuiSelect-select': { paddingLeft: '14px', fontWeight: 600, fontSize: '0.87rem' },
       '& .MuiSvgIcon-root': { color: theme.palette.text.disabled },
@@ -512,7 +516,7 @@ const GraphPage = () => {
                 className={classes.glassDate}
                 value={fromTime}
                 onChange={(e) => setFromTime(e.target.value)}
-                sx={{ minWidth: 200 }}
+                sx={{ minWidth: { xs: '100%', sm: 200 } }}
                 slotProps={{
                   input: { startAdornment: <CalendarToday sx={{ fontSize: 15, color: theme.palette.text.disabled, mr: 1 }} /> },
                 }}
@@ -523,7 +527,7 @@ const GraphPage = () => {
                 className={classes.glassDate}
                 value={toTime}
                 onChange={(e) => setToTime(e.target.value)}
-                sx={{ minWidth: 200 }}
+                sx={{ minWidth: { xs: '100%', sm: 200 } }}
               />
             </>
           )}
@@ -548,7 +552,7 @@ const GraphPage = () => {
         </Box>
 
         {/* ── Summary Metric Cards ── */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }, gap: 2 }}>
           {SUMMARY_CONFIG.map(({ label, key, Icon, color }) => (
             <Box key={key} className={classes.metricCard}>
               <Box>

@@ -24,6 +24,8 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       flex: 1,
       boxSizing: 'border-box',
       padding: theme.spacing(3),
+      [theme.breakpoints.down('md')]: { padding: theme.spacing(2) },
+      [theme.breakpoints.down('sm')]: { padding: theme.spacing(1.5) },
       background: theme.palette.background.default,
       minHeight: '100vh',
       display: 'flex',
@@ -34,6 +36,8 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       marginBottom: theme.spacing(3),
+      gap: theme.spacing(1.5),
+      flexWrap: 'wrap',
     },
     pageTitle: {
       fontWeight: 800,
@@ -42,6 +46,7 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       display: 'flex',
       alignItems: 'center',
       gap: theme.spacing(1),
+      [theme.breakpoints.down('sm')]: { fontSize: '1.05rem' },
     },
     pageSubtitle: { color: theme.palette.text.secondary, fontSize: '0.85rem' },
     searchAndFilterRow: {
@@ -64,6 +69,9 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
         '&:hover fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.2)' : theme.palette.divider },
       },
       '& .MuiOutlinedInput-input::placeholder': { color: theme.palette.text.disabled, opacity: 1 },
+      [theme.breakpoints.down('md')]: {
+        '& .MuiOutlinedInput-root': { width: '100%' },
+      },
     },
     filterIcon: {
       width: 40,
@@ -86,6 +94,7 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       background: '#6366f1',
       color: '#fff',
       '&:hover': { background: '#4f46e5' },
+      [theme.breakpoints.down('sm')]: { width: '100%' },
     },
     maintenanceCard: {
       borderRadius: '12px',
@@ -127,6 +136,9 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       rowGap: '4px',
       columnGap: '12px',
       fontSize: '0.8rem',
+      [theme.breakpoints.down('sm')]: {
+        gridTemplateColumns: '1fr',
+      },
     },
     label: { color: theme.palette.text.disabled },
     value: { color: theme.palette.text.primary, fontWeight: 600 },
@@ -160,6 +172,13 @@ const useStyles = makeStyles({ name: 'MaintenancePage' })((theme) => {
       border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
       fontSize: '0.85rem',
       fontWeight: 600,
+      [theme.breakpoints.down('sm')]: {
+        width: '100%',
+        justifyContent: 'center',
+        padding: '8px 10px',
+        gap: 6,
+        fontSize: '0.78rem',
+      },
     },
   };
 });
@@ -241,7 +260,7 @@ const CardSkeleton = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   return (
-    <Box sx={{ width: 'calc(25% - 15px)', flexShrink: 0 }}>
+    <Box sx={{ width: '100%', flexShrink: 0 }}>
       <Box sx={{
         borderRadius: '12px', p: 2,
         border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
@@ -544,7 +563,14 @@ const MaintenanceDashboard = () => {
         </Box>
 
         {!loading && (
-          <Stack direction="row" spacing={2} sx={{ mb: 3, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              mb: 3,
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+              gap: { xs: 1, sm: 2 },
+            }}
+          >
             <Box className={classes.summaryBadge}>
               <WarningAmberOutlined sx={{ color: '#ef4444', fontSize: 18 }} />
               <span style={{ color: '#ef4444' }}>{countExpired}</span>
@@ -560,7 +586,7 @@ const MaintenanceDashboard = () => {
               <span style={{ color: '#10b981' }}>{countOk}</span>
               <span style={{ color: theme.palette.text.secondary, fontWeight: 400 }}>En cours</span>
             </Box>
-          </Stack>
+          </Box>
         )}
 
         {error && (
@@ -570,7 +596,7 @@ const MaintenanceDashboard = () => {
         )}
 
         <Box className={classes.searchAndFilterRow}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             <TextField
               placeholder="Rechercher par nom, véhicule ou type..."
               className={classes.searchField}
@@ -605,7 +631,7 @@ const MaintenanceDashboard = () => {
           </Button>
         </Box>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' }, gap: 2.5 }}>
           {loading ? (
             [...Array(8)].map((_, i) => <CardSkeleton key={i} />)
           ) : filtered.length === 0 ? (
@@ -617,7 +643,7 @@ const MaintenanceDashboard = () => {
               const colors = statusColors(item.status);
               const isExpired = item.remaining === '0 jours' || item.remaining === '0 km' || item.remaining === '0 h';
               return (
-                <Box key={item._id} sx={{ width: 'calc(25% - 15px)', minWidth: 220, flexShrink: 0 }}>
+                <Box key={item._id} sx={{ minWidth: 0 }}>
                   <Box className={cx(classes.maintenanceCard, colors.bg)}>
                     <Box className={classes.cardHeader}>
                       <Typography className={classes.cardTitle}>

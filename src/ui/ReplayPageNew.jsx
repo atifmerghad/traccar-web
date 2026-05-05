@@ -103,6 +103,9 @@ const useStyles = makeStyles()((theme) => {
       flexDirection: 'column',
       overflow: 'hidden',
       boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
+      [theme.breakpoints.down('lg')]: { width: 340 },
+      [theme.breakpoints.down('md')]: { width: 'min(320px, 100%)' },
+      [theme.breakpoints.down('sm')]: { width: '100%' },
     },
 
     sidebarHeader: {
@@ -112,6 +115,7 @@ const useStyles = makeStyles()((theme) => {
       padding: '14px 18px',
       borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
       flexShrink: 0,
+      [theme.breakpoints.down('sm')]: { padding: '12px 12px' },
     },
 
     scrollArea: {
@@ -167,6 +171,7 @@ const useStyles = makeStyles()((theme) => {
       height: 36,
       '&:hover': { background: theme.palette.action.hover, color: theme.palette.text.primary },
       '&.Mui-disabled': { opacity: 0.3 },
+      [theme.breakpoints.down('sm')]: { width: 32, height: 32 },
     },
 
     playBtn: {
@@ -177,6 +182,7 @@ const useStyles = makeStyles()((theme) => {
       height: 44,
       '&:hover': { background: '#4f46e5' },
       '&.Mui-disabled': { background: 'rgba(99,102,241,0.25)', color: 'rgba(255,255,255,0.3)' },
+      [theme.breakpoints.down('sm')]: { width: 40, height: 40 },
     },
 
     activityItem: {
@@ -432,7 +438,7 @@ const ReplayPageNew = () => {
         {!loaded && (
           <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
             {/* Period presets */}
-            <Stack direction="row" spacing={0.8} mb={2}>
+            <Stack direction="row" spacing={0.8} mb={2} flexWrap="wrap">
               {PERIOD_PRESETS.map((p) => (
                 <Chip
                   key={p.value}
@@ -630,7 +636,7 @@ const ReplayPageNew = () => {
             </Box>
 
             {/* Controls row */}
-            <Box sx={{ px: 2, pb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ px: 2, pb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
               {/* Speed selector */}
               <Select
                 value={playbackSpeed}
@@ -711,6 +717,7 @@ const ReplayPageNew = () => {
                   px: 1,
                   py: 0.5,
                   textAlign: 'center',
+                  marginLeft: { xs: 'auto', sm: 0 },
                 }}
               >
                 <Typography

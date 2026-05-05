@@ -35,68 +35,90 @@ import Loader from '../common/components/Loader';
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const useStyles = makeStyles()(() => ({
-  root: {
-    flex: '0 0 50%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#080d1a',
-    minHeight: '100vh',
-    position: 'relative',
-    padding: '24px',
-    '@media (max-width: 900px)': { flex: '1 1 100%' },
-  },
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
 
-  topBar: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-
-  card: {
-    width: '100%',
-    maxWidth: 440,
-    background: 'rgba(255,255,255,0.04)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 24,
-    padding: '36px 36px 28px',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-  },
-
-  input: {
-    '& .MuiOutlinedInput-root': {
-      background: 'rgba(255,255,255,0.05)',
-      borderRadius: '12px',
-      color: '#e2e8f0',
-      fontSize: '0.9rem',
-      '& fieldset': { border: '1px solid rgba(255,255,255,0.1)' },
-      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-      '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
+  return {
+    root: {
+      flex: '0 0 50%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: isDark
+        ? 'linear-gradient(160deg, #0c1629 0%, #080d1a 45%, #0a1020 100%)'
+        : `linear-gradient(160deg, #e0e7ff 0%, ${theme.palette.background.default} 45%, #f0f4ff 100%)`,
+      minHeight: '100vh',
+      position: 'relative',
+      padding: '24px',
+      '@media (max-width: 900px)': { flex: '1 1 100%' },
     },
-    '& .MuiInputLabel-root': { color: '#64748b', fontSize: '0.9rem' },
-    '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
-    '& .MuiFormHelperText-root': { color: '#ef4444', fontSize: '0.75rem' },
-    '& .MuiInputBase-input': { color: '#e2e8f0' },
-  },
 
-  langSelect: {
-    background: 'rgba(255,255,255,0.05)',
-    borderRadius: '10px',
-    color: '#94a3b8',
-    fontSize: '0.82rem',
-    '& .MuiOutlinedInput-notchedOutline': { border: '1px solid rgba(255,255,255,0.1)' },
-    '& .MuiSelect-select': { py: '6px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 },
-    '& .MuiSvgIcon-root': { color: '#475569' },
-    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-  },
-}));
+    topBar: {
+      position: 'absolute',
+      top: 20,
+      right: 20,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+    },
+
+    card: {
+      width: '100%',
+      maxWidth: 440,
+      background: isDark ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.9)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      border: `1px solid ${isDark ? 'rgba(148,163,184,0.25)' : 'rgba(148,163,184,0.3)'}`,
+      borderRadius: 24,
+      padding: '36px 36px 28px',
+      boxShadow: isDark ? '0 24px 64px rgba(0,0,0,0.6)' : '0 18px 40px rgba(15,23,42,0.18)',
+    },
+
+    input: {
+      '& .MuiOutlinedInput-root': {
+        background: isDark ? 'rgba(15,23,42,0.85)' : theme.palette.background.paper,
+        borderRadius: '12px',
+        color: theme.palette.text.primary,
+        fontSize: '0.9rem',
+        '& fieldset': {
+          border: `1px solid ${isDark ? 'rgba(148,163,184,0.35)' : 'rgba(148,163,184,0.5)'}`,
+        },
+        '&:hover fieldset': {
+          borderColor: isDark ? 'rgba(148,163,184,0.7)' : 'rgba(99,102,241,0.7)',
+        },
+        '&.Mui-focused fieldset': { borderColor: '#6366f1', borderWidth: 2 },
+      },
+      '& .MuiInputLabel-root': { color: theme.palette.text.secondary, fontSize: '0.9rem' },
+      '& .MuiInputLabel-root.Mui-focused': { color: '#818cf8' },
+      '& .MuiFormHelperText-root': { color: theme.palette.error.main, fontSize: '0.75rem' },
+      '& .MuiInputBase-input': { color: theme.palette.text.primary },
+    },
+
+    langSelect: {
+      background: isDark ? 'rgba(15,23,42,0.85)' : theme.palette.background.paper,
+      borderRadius: '10px',
+      color: theme.palette.text.secondary,
+      fontSize: '0.82rem',
+      '& .MuiOutlinedInput-notchedOutline': {
+        border: `1px solid ${isDark ? 'rgba(148,163,184,0.35)' : 'rgba(148,163,184,0.5)'}`,
+      },
+      '& .MuiSelect-select': {
+        py: '6px',
+        fontSize: '0.82rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+      },
+      '& .MuiSvgIcon-root': {
+        color: isDark ? '#64748b' : '#475569',
+      },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: isDark ? 'rgba(148,163,184,0.7)' : 'rgba(99,102,241,0.7)',
+      },
+    },
+  };
+});
 
 const DARK_MENU = {
   PaperProps: {

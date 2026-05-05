@@ -24,6 +24,8 @@ const useStyles = makeStyles()((theme) => {
   return {
     root: {
       padding: '24px',
+      [theme.breakpoints.down('md')]: { padding: '16px' },
+      [theme.breakpoints.down('sm')]: { padding: '12px' },
       background: theme.palette.background.default,
       minHeight: '100vh',
       display: 'flex',
@@ -43,6 +45,13 @@ const useStyles = makeStyles()((theme) => {
       minWidth: 130,
       transition: 'border-color 0.2s',
       '&:hover': { borderColor: theme.palette.action.selected },
+      [theme.breakpoints.down('sm')]: {
+        minWidth: 0,
+        maxWidth: 'none',
+        width: '100%',
+        padding: '9px 10px',
+        gap: 8,
+      },
     },
 
     tableWrap: {
@@ -50,7 +59,13 @@ const useStyles = makeStyles()((theme) => {
       backdropFilter: 'blur(16px)',
       border: `1px solid ${theme.palette.divider}`,
       borderRadius: '18px',
-      overflow: 'hidden',
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      width: '100%',
+      WebkitOverflowScrolling: 'touch',
+      [theme.breakpoints.down('sm')]: {
+        borderRadius: '12px',
+      },
     },
 
     tableHeadCell: {
@@ -63,12 +78,14 @@ const useStyles = makeStyles()((theme) => {
       background: isDark ? 'rgba(255,255,255,0.02)' : theme.palette.action.hover,
       padding: '12px 16px',
       whiteSpace: 'nowrap',
+      [theme.breakpoints.down('sm')]: { fontSize: '0.64rem', padding: '10px 12px' },
     },
 
     tableCell: {
       borderBottom: `1px solid ${theme.palette.divider}`,
       padding: '12px 16px',
       color: theme.palette.text.secondary,
+      [theme.breakpoints.down('sm')]: { padding: '10px 12px' },
     },
 
     tableRow: {
@@ -111,6 +128,7 @@ const useStyles = makeStyles()((theme) => {
       border: `1px solid ${theme.palette.divider}`,
       color: theme.palette.text.disabled,
       '&:hover': { color: theme.palette.text.primary, background: theme.palette.action.selected },
+      [theme.breakpoints.down('sm')]: { width: 28, height: 28 },
     },
   };
 });
@@ -329,15 +347,22 @@ const UsersPageNew = () => {
       <Box className={classes.root}>
 
         {/* ── Header ── */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'flex-start' }, flexWrap: 'wrap', gap: { xs: 1.5, sm: 2 } }}>
           <Box>
-            <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: 'text.primary' }}>Utilisateurs</Typography>
-            <Typography sx={{ fontSize: '0.82rem', color: 'text.disabled', mt: 0.4 }}>
+            <Typography sx={{ fontSize: { xs: '1.05rem', sm: '1.35rem' }, fontWeight: 800, color: 'text.primary' }}>Utilisateurs</Typography>
+            <Typography sx={{ fontSize: { xs: '0.74rem', sm: '0.82rem' }, color: 'text.disabled', mt: 0.4 }}>
               Gestion des comptes et des permissions
             </Typography>
           </Box>
 
-          <Stack direction="row" spacing={1.5} flexWrap="wrap">
+          <Box
+            sx={{
+              width: { xs: '100%', sm: 'auto' },
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, auto)' },
+              gap: { xs: 1, sm: 1.5 },
+            }}
+          >
             {[
               { icon: <Group sx={{ fontSize: 18, color: '#6366f1' }} />, value: stats.total, label: 'Total' },
               { icon: <VerifiedUser sx={{ fontSize: 18, color: '#22c55e' }} />, value: stats.active, label: 'Actifs' },
@@ -347,23 +372,23 @@ const UsersPageNew = () => {
               <Box key={label} className={classes.statCard}>
                 {icon}
                 <Box>
-                  <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: 'text.primary', lineHeight: 1 }}>{value}</Typography>
-                  <Typography sx={{ fontSize: '0.68rem', color: 'text.disabled', mt: 0.2 }}>{label}</Typography>
+                  <Typography sx={{ fontWeight: 800, fontSize: { xs: '0.95rem', sm: '1.1rem' }, color: 'text.primary', lineHeight: 1 }}>{value}</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.62rem', sm: '0.68rem' }, color: 'text.disabled', mt: 0.2 }}>{label}</Typography>
                 </Box>
               </Box>
             ))}
-          </Stack>
+          </Box>
         </Box>
 
         {/* ── Filter bar ── */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: { xs: 'stretch', sm: 'center' }, gap: 1.5, flexWrap: 'wrap' }}>
           <TextField
             placeholder="Rechercher par nom ou email..."
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={classes.inputDark}
-            sx={{ minWidth: 280 }}
+            sx={{ minWidth: { xs: '100%', sm: 280 } }}
             slotProps={{
               input: {
                 startAdornment: (
@@ -375,7 +400,7 @@ const UsersPageNew = () => {
             }}
           />
 
-          <Stack direction="row" spacing={0.7} flexWrap="wrap">
+          <Stack direction="row" spacing={0.7} flexWrap="wrap" sx={{ width: { xs: '100%', sm: 'auto' } }}>
             {ROLE_FILTERS.map((f) => (
               <Chip
                 key={f.value}
@@ -383,7 +408,7 @@ const UsersPageNew = () => {
                 size="small"
                 onClick={() => setRoleFilter(f.value)}
                 sx={{
-                  height: 28, fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer',
+                  height: { xs: 26, sm: 28 }, fontSize: { xs: '0.7rem', sm: '0.76rem' }, fontWeight: 600, cursor: 'pointer',
                   color: roleFilter === f.value ? f.color : theme.palette.text.disabled,
                   borderColor: roleFilter === f.value ? `${f.color}50` : theme.palette.divider,
                   background: roleFilter === f.value ? `${f.color}14` : 'transparent',
@@ -394,7 +419,7 @@ const UsersPageNew = () => {
             ))}
           </Stack>
 
-          <Box sx={{ flex: 1 }} />
+          <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
 
           {canManage && (
             <Button
@@ -404,7 +429,7 @@ const UsersPageNew = () => {
               onClick={() => { setEditUser(EMPTY_USER); setOpen(true); }}
               sx={{
                 bgcolor: '#6366f1', borderRadius: '12px', textTransform: 'none',
-                fontWeight: 700, px: 2.5, height: 36, fontSize: '0.85rem',
+                fontWeight: 700, px: 2.5, height: { xs: 34, sm: 36 }, fontSize: { xs: '0.8rem', sm: '0.85rem' }, width: { xs: '100%', sm: 'auto' },
                 '&:hover': { bgcolor: '#4f46e5' },
               }}
             >
@@ -414,8 +439,8 @@ const UsersPageNew = () => {
         </Box>
 
         {/* ── Table ── */}
-        <Box className={classes.tableWrap}>
-          <Table sx={{ minWidth: 700 }}>
+        <TableContainer className={classes.tableWrap}>
+          <Table sx={{ minWidth: { xs: 760, sm: 700 } }}>
             <TableHead>
               <TableRow>
                 {['Utilisateur', 'Rôle', 'Limites', 'Expiration', 'Statut', 'Actions'].map((h) => (
@@ -445,17 +470,17 @@ const UsersPageNew = () => {
                     <TableRow key={user.id} className={classes.tableRow}>
 
                       <TableCell className={classes.tableCell}>
-                        <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Stack direction="row" spacing={{ xs: 1, sm: 1.5 }} alignItems="center">
                           <Avatar
                             sx={{
-                              width: 34, height: 34, fontSize: '0.85rem', fontWeight: 700,
+                              width: { xs: 30, sm: 34 }, height: { xs: 30, sm: 34 }, fontSize: { xs: '0.75rem', sm: '0.85rem' }, fontWeight: 700,
                               bgcolor: `${role.color}28`, color: role.color, border: `1px solid ${role.color}40`,
                             }}
                           >
                             {user.name?.charAt(0).toUpperCase()}
                           </Avatar>
                           <Box>
-                            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem', color: 'text.primary', lineHeight: 1.2 }}>
+                            <Typography sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.88rem' }, color: 'text.primary', lineHeight: 1.2 }}>
                               {user.name}
                               {isSelf && (
                                 <Box component="span" sx={{ ml: 1, fontSize: '0.65rem', color: '#6366f1', fontWeight: 700 }}>
@@ -463,7 +488,7 @@ const UsersPageNew = () => {
                                 </Box>
                               )}
                             </Typography>
-                            <Typography sx={{ fontSize: '0.72rem', color: 'text.disabled', mt: 0.2 }}>{user.email}</Typography>
+                            <Typography sx={{ fontSize: { xs: '0.66rem', sm: '0.72rem' }, color: 'text.disabled', mt: 0.2 }}>{user.email}</Typography>
                           </Box>
                         </Stack>
                       </TableCell>
@@ -520,7 +545,7 @@ const UsersPageNew = () => {
                       </TableCell>
 
                       <TableCell className={classes.tableCell}>
-                        <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Stack direction="row" spacing={0.35} alignItems="center" justifyContent={{ xs: 'flex-end', sm: 'flex-start' }}>
                           <Tooltip title={user.disabled ? 'Activer' : 'Désactiver'}>
                             <Switch
                               size="small"
@@ -577,7 +602,7 @@ const UsersPageNew = () => {
               )}
             </TableBody>
           </Table>
-        </Box>
+        </TableContainer>
 
         {/* ── Create / Edit Dialog ── */}
         <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: dialogPaper }}>

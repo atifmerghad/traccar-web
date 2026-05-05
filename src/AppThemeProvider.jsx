@@ -21,7 +21,7 @@ const AppThemeProvider = ({ children }) => {
   const server = useSelector((state) => state.session.server);
   const { direction } = useLocalization();
 
-  const serverDarkMode = server?.attributes?.darkMode;
+  const serverDarkMode = true;//server?.attributes?.darkMode;
   const preferDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const darkMode = serverDarkMode !== undefined ? serverDarkMode : preferDarkMode;
 

@@ -117,7 +117,7 @@ const ReportPageNew = () => {
     <PageLayout>
       <Box sx={{
         width: '100%', flex: 1, boxSizing: 'border-box',
-        padding: 3, background: theme.palette.background.default,
+        padding: { xs: 1.5, md: 3 }, background: theme.palette.background.default,
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
       }}>
         {/* ── Header ── */}
@@ -138,7 +138,7 @@ const ReportPageNew = () => {
             </Box>
           </Box>
 
-          <Stack direction="row" spacing={1.5}>
+          <Stack direction="row" spacing={1.5} sx={{ width: { xs: '100%', sm: 'auto' } }}>
             <Button
               size="small"
               startIcon={<FileDownload sx={{ fontSize: 16 }} />}
@@ -147,6 +147,7 @@ const ReportPageNew = () => {
               sx={{
                 ...glass, textTransform: 'none', fontWeight: 600,
                 fontSize: '0.82rem', color: theme.palette.text.secondary, px: 2, py: 0.75,
+                width: { xs: '50%', sm: 'auto' },
                 '&:hover': { background: isDark ? 'rgba(255,255,255,0.09)' : theme.palette.action.selected, color: theme.palette.text.primary },
                 '&.Mui-disabled': { opacity: 0.4 },
               }}
@@ -162,6 +163,7 @@ const ReportPageNew = () => {
                 borderRadius: '10px', textTransform: 'none',
                 fontWeight: 600, fontSize: '0.82rem', color: '#818cf8',
                 px: 2, py: 0.75,
+                width: { xs: '50%', sm: 'auto' },
                 '&:hover': { background: 'rgba(99,102,241,0.25)' },
               }}
             >
@@ -176,7 +178,7 @@ const ReportPageNew = () => {
           display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap',
         }}>
           {/* Report type */}
-          <FormControl size="small" sx={{ minWidth: 220, ...darkInputSx }}>
+          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 }, ...darkInputSx }}>
             <InputLabel>Type de rapport</InputLabel>
             <Select
               value={reportType}
@@ -203,7 +205,7 @@ const ReportPageNew = () => {
             getOptionLabel={(d) => d.name || ''}
             value={selectedDevice || null}
             onChange={(_, v) => setDeviceId(v?.id || '')}
-            sx={{ minWidth: 220 }}
+            sx={{ minWidth: { xs: '100%', sm: 220 } }}
             slotProps={{
               paper: {
                 sx: menuPaperSx,
@@ -219,7 +221,7 @@ const ReportPageNew = () => {
           />
 
           {/* Period */}
-          <FormControl size="small" sx={{ minWidth: 180, ...darkInputSx }}>
+          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 }, ...darkInputSx }}>
             <InputLabel>{t('reportPeriod')}</InputLabel>
             <Select
               value={period}
@@ -240,7 +242,7 @@ const ReportPageNew = () => {
               display: 'flex', alignItems: 'center', gap: 1,
               background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : theme.palette.divider}`,
-              borderRadius: '10px', px: 2, py: '7px', minWidth: 260,
+              borderRadius: '10px', px: 2, py: '7px', minWidth: { xs: '100%', sm: 260 },
             }}>
               <CalendarToday sx={{ fontSize: 14, color: theme.palette.text.disabled }} />
               <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary, fontWeight: 500 }}>{dateLabel}</Typography>
@@ -253,7 +255,7 @@ const ReportPageNew = () => {
                 label={t('reportFrom')}
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                sx={{ minWidth: 240, ...darkInputSx }}
+                sx={{ minWidth: { xs: '100%', md: 240 }, ...darkInputSx }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
               <TextField
@@ -262,7 +264,7 @@ const ReportPageNew = () => {
                 label={t('reportTo')}
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                sx={{ minWidth: 240, ...darkInputSx }}
+                sx={{ minWidth: { xs: '100%', md: 240 }, ...darkInputSx }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
             </>
