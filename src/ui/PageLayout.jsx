@@ -13,86 +13,90 @@ import { useDispatch, useSelector } from 'react-redux';
 import { sessionActions } from '../store';
 import { nativePostMessage } from '../common/components/NativeInterface';
 
-const useStyles = makeStyles()(() => ({
-  root: {
-    display: 'flex',
-    height: '100vh',
-    background: '#080d1a',
-    overflow: 'hidden',
-  },
-  sidebar: {
-    width: 64,
-    background: 'rgba(8, 13, 26, 0.97)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 16,
-    zIndex: 10,
-    flexShrink: 0,
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    background: 'rgba(99,102,241,0.15)',
-    border: '1px solid rgba(99,102,241,0.35)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    marginBottom: 12,
-    cursor: 'pointer',
-    flexShrink: 0,
-    transition: 'transform 0.2s ease, background 0.2s ease',
-  },
-  navStack: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    alignItems: 'center',
-    width: '100%',
-    padding: '0 10px',
-    flex: 1,
-  },
-  navBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    padding: 0,
-  },
-  content: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    background: '#080d1a',
-  },
-  spacer: { flexGrow: 1 },
-  bottomStack: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    alignItems: 'center',
-    width: '100%',
-    padding: '0 10px',
-  },
-}));
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    root: {
+      display: 'flex',
+      height: '100vh',
+      background: theme.palette.background.default,
+      overflow: 'hidden',
+    },
+    sidebar: {
+      width: 64,
+      background: isDark ? 'rgba(8, 13, 26, 0.97)' : 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRight: `1px solid ${theme.palette.divider}`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      paddingTop: 16,
+      paddingBottom: 16,
+      zIndex: 10,
+      flexShrink: 0,
+    },
+    logo: {
+      width: 40,
+      height: 40,
+      background: 'rgba(99,102,241,0.15)',
+      border: '1px solid rgba(99,102,241,0.35)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 10,
+      marginBottom: 12,
+      cursor: 'pointer',
+      flexShrink: 0,
+      transition: 'transform 0.2s ease, background 0.2s ease',
+    },
+    navStack: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 4,
+      alignItems: 'center',
+      width: '100%',
+      padding: '0 10px',
+      flex: 1,
+    },
+    navBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      padding: 0,
+    },
+    content: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      background: theme.palette.background.default,
+    },
+    spacer: { flexGrow: 1 },
+    bottomStack: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 4,
+      alignItems: 'center',
+      width: '100%',
+      padding: '0 10px',
+    },
+  };
+});
 
 const NavItem = ({ icon, label, active, onClick }) => {
   const { classes } = useStyles();
+  const theme = useTheme();
   const [hovered, setHovered] = useState(false);
 
   const bg = active
     ? 'rgba(99,102,241,0.18)'
     : hovered
-      ? 'rgba(255,255,255,0.07)'
+      ? theme.palette.action.hover
       : 'transparent';
 
-  const iconColor = active ? '#818cf8' : hovered ? '#94a3b8' : '#475569';
+  const iconColor = active ? '#818cf8' : hovered ? theme.palette.text.secondary : theme.palette.text.disabled;
 
   return (
     <Tooltip title={label} placement="right">
@@ -167,8 +171,6 @@ const PageLayout = ({ children }) => {
       <Box
         className={classes.logo}
         onClick={() => navigate('/dashboard')}
-        onMouseEnter={() => {}}
-        onMouseLeave={() => {}}
         style={{ transform: logoHovered ? 'scale(1.08)' : 'scale(1)' }}
         onMouseOver={() => setLogoHovered(true)}
         onMouseOut={() => setLogoHovered(false)}

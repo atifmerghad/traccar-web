@@ -4,6 +4,7 @@ import {
   TextField, Select, MenuItem, Slider, Divider, Tooltip,
   Snackbar, Alert, CircularProgress,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   ChevronRight, Close, Share, NotificationsOutlined,
   FmdGoodOutlined, MapOutlined, SettingsRemoteOutlined,
@@ -32,14 +33,14 @@ import { useEffectAsync } from '../reactHelper';
 
 dayjs.extend(relativeTime);
 
-const useStyles = makeStyles()((theme) => ({
+const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode === 'dark'; return {
   mainContainer: {
     flex: 1,
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    background: '#080d1a',
+    background: theme.palette.background.default,
   },
   mapContainer: {
     position: 'absolute',
@@ -58,10 +59,10 @@ const useStyles = makeStyles()((theme) => ({
     flexDirection: 'column',
     borderRadius: 8,
     overflow: 'hidden',
-    background: 'rgba(8,13,26,0.97)',
+    background: isDark ? 'rgba(8,13,26,0.97)' : 'rgba(255,255,255,0.97)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: `1px solid ${theme.palette.divider}`,
     zIndex: 1000,
     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
   },
@@ -70,10 +71,10 @@ const useStyles = makeStyles()((theme) => ({
     overflowY: 'auto',
     padding: theme.spacing(1.5),
     scrollbarWidth: 'thin',
-    scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+    scrollbarColor: `${theme.palette.action.selected} transparent`,
     '&::-webkit-scrollbar': { width: 4 },
     '&::-webkit-scrollbar-track': { background: 'transparent' },
-    '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.12)', borderRadius: 4 },
+    '&::-webkit-scrollbar-thumb': { background: theme.palette.action.selected, borderRadius: 4 },
   },
   expandFab: {
     position: 'absolute',
@@ -83,9 +84,9 @@ const useStyles = makeStyles()((theme) => ({
     width: 36,
     height: 36,
     minHeight: 'unset',
-    background: 'rgba(8,13,26,0.9)',
-    color: '#94a3b8',
-    border: '1px solid rgba(255,255,255,0.12)',
+    background: isDark ? 'rgba(8,13,26,0.9)' : 'rgba(255,255,255,0.9)',
+    color: theme.palette.text.secondary,
+    border: `1px solid ${theme.palette.divider}`,
     boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
   },
   rightToolbar: {
@@ -97,16 +98,16 @@ const useStyles = makeStyles()((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: 6,
-    background: 'rgba(8,13,26,0.95)',
+    background: isDark ? 'rgba(8,13,26,0.95)' : 'rgba(255,255,255,0.95)',
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: `1px solid ${theme.palette.divider}`,
     borderRadius: 14,
     padding: '10px 7px',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
   },
-  toolbarDivider: { height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0' },
-  toolbarBtn: { width: 38, height: 38, borderRadius: '10px !important', color: '#94a3b8' },
+  toolbarDivider: { height: 1, background: theme.palette.divider, margin: '4px 0' },
+  toolbarBtn: { width: 38, height: 38, borderRadius: '10px !important', color: theme.palette.text.secondary },
   toolbarBtnActive: { background: '#6366f1 !important', color: '#fff !important' },
   panel: {
     position: 'absolute',
@@ -114,10 +115,10 @@ const useStyles = makeStyles()((theme) => ({
     right: 6,
     width: 360,
     height: 'calc(100% - 12px)',
-    background: 'rgba(8,13,26,0.97)',
+    background: isDark ? 'rgba(8,13,26,0.97)' : 'rgba(255,255,255,0.97)',
     backdropFilter: 'blur(24px)',
     WebkitBackdropFilter: 'blur(24px)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: `1px solid ${theme.palette.divider}`,
     borderRadius: 12,
     zIndex: 1003,
     boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
@@ -130,10 +131,10 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '20px 20px 16px',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: `1px solid ${theme.palette.divider}`,
     flexShrink: 0,
   },
-  panelTitle: { fontWeight: 800, fontSize: '1.1rem', color: '#f1f5f9' },
+  panelTitle: { fontWeight: 800, fontSize: '1.1rem', color: theme.palette.text.primary },
   panelSubtitle: { fontSize: '0.8rem', color: '#6366f1', fontWeight: 600 },
   panelBody: { flex: 1, overflowY: 'auto', padding: '12px 20px' },
   panelRow: {
@@ -141,12 +142,12 @@ const useStyles = makeStyles()((theme) => ({
     alignItems: 'center',
     gap: 14,
     padding: '14px 0',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: `1px solid ${theme.palette.divider}`,
     cursor: 'pointer',
   },
   panelRowIcon: { width: 44, height: 44, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  panelRowTitle: { fontWeight: 600, fontSize: '0.9rem', color: '#e2e8f0' },
-  panelRowSub: { fontSize: '0.75rem', color: '#94a3b8' },
+  panelRowTitle: { fontWeight: 600, fontSize: '0.9rem', color: theme.palette.text.primary },
+  panelRowSub: { fontSize: '0.75rem', color: theme.palette.text.secondary },
   commandGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
   commandBtn: {
     display: 'flex',
@@ -155,8 +156,8 @@ const useStyles = makeStyles()((theme) => ({
     gap: 8,
     padding: '18px 10px',
     borderRadius: 12,
-    border: '1.5px solid rgba(255,255,255,0.1)',
-    background: 'rgba(255,255,255,0.03)',
+    border: `1.5px solid ${theme.palette.divider}`,
+    background: isDark ? 'rgba(255,255,255,0.03)' : theme.palette.action.hover,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   },
@@ -172,15 +173,17 @@ const useStyles = makeStyles()((theme) => ({
     cursor: 'pointer',
     fontSize: '0.8rem',
     fontWeight: 600,
-    border: '1.5px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.04)',
-    color: '#94a3b8',
+    border: `1.5px solid ${theme.palette.divider}`,
+    background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.background.paper,
+    color: theme.palette.text.secondary,
   },
-}));
+}; });
 
 // ─── Panel: Share ─────────────────────────────────────────────────────────────
 
 const SharePanel = ({ vehicle, classes, onClose }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const lat = vehicle?.position?.latitude;
   const lng = vehicle?.position?.longitude;
   const openGoogleMaps = () => { if (lat && lng) window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank'); };
@@ -193,7 +196,7 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Partager les Données</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         {[
@@ -208,10 +211,10 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
               <Typography className={classes.panelRowTitle}>{item.title}</Typography>
               <Typography className={classes.panelRowSub}>{item.sub}</Typography>
             </Box>
-            <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
+            <Box sx={{ color: 'text.disabled', fontSize: 20 }}>›</Box>
           </Box>
         ))}
-        <Typography sx={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600, mt: 2, mb: 1 }}>Partager la Localisation</Typography>
+        <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', fontWeight: 600, mt: 2, mb: 1 }}>Partager la Localisation</Typography>
         <Box className={classes.panelRow} onClick={openGoogleMaps}>
           <Box className={classes.panelRowIcon} sx={{ bgcolor: 'rgba(245,158,11,0.15)' }}>
             <MyLocation sx={{ color: '#f59e0b' }} />
@@ -220,7 +223,7 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
             <Typography className={classes.panelRowTitle}>Google Maps</Typography>
             <Typography className={classes.panelRowSub}>{lat ? `${lat.toFixed(5)}, ${lng?.toFixed(5)}` : 'Position non disponible'}</Typography>
           </Box>
-          <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
+          <Box sx={{ color: 'text.disabled', fontSize: 20 }}>›</Box>
         </Box>
         <Box className={classes.panelRow} onClick={openWaze}>
           <Box className={classes.panelRowIcon} sx={{ bgcolor: 'rgba(16,185,129,0.15)' }}>
@@ -230,7 +233,7 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
             <Typography className={classes.panelRowTitle}>Waze</Typography>
             <Typography className={classes.panelRowSub}>Naviguer avec Waze</Typography>
           </Box>
-          <Box sx={{ color: '#475569', fontSize: 20 }}>›</Box>
+          <Box sx={{ color: 'text.disabled', fontSize: 20 }}>›</Box>
         </Box>
       </Box>
     </Box>
@@ -240,6 +243,8 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
 // ─── Panel: Alerts ────────────────────────────────────────────────────────────
 
 const AlertsPanel = ({ vehicle, classes, onClose }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [enabled, setEnabled] = useState({});
   useEffect(() => {
     if (!vehicle?.id) return;
@@ -267,7 +272,7 @@ const AlertsPanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Alertes</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         {alerts.map((item) => (
@@ -288,6 +293,8 @@ const AlertsPanel = ({ vehicle, classes, onClose }) => {
 // ─── Panel: Geofence ─────────────────────────────────────────────────────────
 
 const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [radius, setRadius] = useState(0.5);
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -310,8 +317,8 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
 
   const darkInput = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '8px', background: 'rgba(255,255,255,0.06)', color: '#f1f5f9',
-      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+      borderRadius: '8px', background: theme.palette.action.hover, color: theme.palette.text.primary,
+      '& fieldset': { borderColor: theme.palette.divider },
       '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
       '&.Mui-focused fieldset': { borderColor: '#6366f1' },
     },
@@ -325,28 +332,28 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
           <Typography className={classes.panelTitle}>Géofences</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         <Box sx={{ bgcolor: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 2, p: 1.5, mb: 2.5 }}>
           <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', mb: 0.5 }}>Créer une géofence circulaire</Typography>
           <Typography sx={{ fontSize: '0.77rem', color: '#7dd3fc', lineHeight: 1.6 }}>La géofence sera centrée sur la position actuelle du véhicule.</Typography>
         </Box>
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8', mb: 0.5 }}>Nom <span style={{ color: '#ef4444' }}>*</span></Typography>
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>Nom <span style={{ color: '#ef4444' }}>*</span></Typography>
         <TextField fullWidth size="small" placeholder="ex: Maison, Bureau, Zone de livraison" value={name} onChange={(e) => setName(e.target.value)} sx={{ mb: 2.5, ...darkInput }} />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8' }}>Rayon</Typography>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'text.secondary' }}>Rayon</Typography>
           <Box sx={{ bgcolor: '#6366f1', color: '#fff', borderRadius: 1, px: 1.5, py: 0.25, fontSize: '0.77rem', fontWeight: 700 }}>{Math.round(radius * 1000)} m</Box>
         </Box>
         <Slider value={radius} min={0.1} max={5} step={0.1} onChange={(_, v) => setRadius(v)} sx={{ color: '#6366f1', mb: 2.5 }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8', mb: 1 }}>📍 Position actuelle</Typography>
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'text.secondary', mb: 1 }}>📍 Position actuelle</Typography>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-          <Typography sx={{ fontSize: '0.82rem', color: '#475569' }}>Lat:</Typography>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0' }}>{lat.toFixed(5)}</Typography>
+          <Typography sx={{ fontSize: '0.82rem', color: 'text.disabled' }}>Lat:</Typography>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'text.primary' }}>{lat.toFixed(5)}</Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, mb: 2.5 }}>
-          <Typography sx={{ fontSize: '0.82rem', color: '#475569' }}>Lng:</Typography>
-          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0' }}>{lng.toFixed(5)}</Typography>
+          <Typography sx={{ fontSize: '0.82rem', color: 'text.disabled' }}>Lng:</Typography>
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'text.primary' }}>{lng.toFixed(5)}</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button fullWidth variant="contained" disableElevation disabled={!name.trim() || saving} onClick={handleSave}
@@ -354,7 +361,7 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
             {saving ? '...' : '✓ Enregistrer'}
           </Button>
           <Button fullWidth variant="outlined" onClick={onClose}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8', '&:hover': { borderColor: 'rgba(255,255,255,0.2)', bgcolor: 'rgba(255,255,255,0.04)' } }}>
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: theme.palette.divider, color: 'text.secondary', '&:hover': { borderColor: theme.palette.divider, bgcolor: theme.palette.action.hover } }}>
             Annuler
           </Button>
         </Box>
@@ -366,6 +373,8 @@ const GeofencePanel = ({ vehicle, classes, onClose, onSaved }) => {
 // ─── Panel: Map Settings ──────────────────────────────────────────────────────
 
 const MapSettingsPanel = ({ classes, onClose }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [mapType, setMapType] = usePersistedState('mapType', 'hybrid');
   const [autoRefresh, setAutoRefresh] = usePersistedState('autoRefresh', true);
   const [lockCamera, setLockCamera] = usePersistedState('lockCamera', false);
@@ -382,11 +391,11 @@ const MapSettingsPanel = ({ classes, onClose }) => {
   const Setting = ({ label, sub, checked, onChange }) => (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75 }}>
-        <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: '#f1f5f9' }}>{label}</Typography>
+        <Typography sx={{ fontSize: '0.86rem', fontWeight: 600, color: 'text.primary' }}>{label}</Typography>
         <Switch size="small" checked={checked} onChange={onChange}
           sx={{ '& .Mui-checked': { color: '#6366f1' }, '& .Mui-checked + .MuiSwitch-track': { bgcolor: 'rgba(99,102,241,0.4)' } }} />
       </Box>
-      {sub && <Typography sx={{ fontSize: '0.73rem', color: '#94a3b8', pb: 0.5 }}>{sub}</Typography>}
+      {sub && <Typography sx={{ fontSize: '0.73rem', color: 'text.secondary', pb: 0.5 }}>{sub}</Typography>}
     </Box>
   );
 
@@ -394,10 +403,10 @@ const MapSettingsPanel = ({ classes, onClose }) => {
     <Box className={classes.panel}>
       <Box className={classes.panelHeader}>
         <Typography className={classes.panelTitle}>Paramètres de la carte</Typography>
-        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1.5 }}>Type de carte</Typography>
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.secondary', mb: 1.5 }}>Type de carte</Typography>
         <Box className={classes.mapTypeGrid}>
           {MAP_TYPES.map((t) => (
             <Box key={t.key} className={classes.mapTypeBtn} onClick={() => setMapType(t.key)}
@@ -407,23 +416,23 @@ const MapSettingsPanel = ({ classes, onClose }) => {
             </Box>
           ))}
         </Box>
-        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Actualisation automatique</Typography>
+        <Divider sx={{ my: 2, borderColor: 'divider' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.secondary', mb: 1 }}>Actualisation automatique</Typography>
         <Setting label="Activer l'actualisation" checked={autoRefresh} onChange={() => setAutoRefresh(!autoRefresh)} />
         {autoRefresh && (
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: '0.8rem', color: '#475569', mb: 1 }}>Intervalle (secondes)</Typography>
+            <Typography sx={{ fontSize: '0.8rem', color: 'text.disabled', mb: 1 }}>Intervalle (secondes)</Typography>
             <Select fullWidth size="small" value={interval_} onChange={(e) => setInterval_(e.target.value)}
-              sx={{ borderRadius: 2, background: 'rgba(255,255,255,0.06)', color: '#f1f5f9', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' }, '& .MuiSvgIcon-root': { color: '#475569' } }}>
+              sx={{ borderRadius: 2, background: theme.palette.action.hover, color: theme.palette.text.primary, '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.divider }, '& .MuiSvgIcon-root': { color: theme.palette.text.disabled } }}>
               {['5', '10', '30', '60'].map((v) => <MenuItem key={v} value={v}>{v} secondes</MenuItem>)}
             </Select>
           </Box>
         )}
-        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Mode de suivi</Typography>
+        <Divider sx={{ my: 2, borderColor: 'divider' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.secondary', mb: 1 }}>Mode de suivi</Typography>
         <Setting label="Verrouiller la caméra" checked={lockCamera} onChange={() => setLockCamera(!lockCamera)} sub="Le zoom et l'inclinaison sont fixés pendant le suivi." />
-        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.06)' }} />
-        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: '#94a3b8', mb: 1 }}>Mouvement</Typography>
+        <Divider sx={{ my: 2, borderColor: 'divider' }} />
+        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: 'text.secondary', mb: 1 }}>Mouvement</Typography>
         <Setting label="Transitions fluides" checked={smoothMovement} onChange={() => setSmoothMovement(!smoothMovement)} sub="Les véhicules se déplacent en douceur entre les positions." />
       </Box>
     </Box>
@@ -433,6 +442,8 @@ const MapSettingsPanel = ({ classes, onClose }) => {
 // ─── Panel: Commands ─────────────────────────────────────────────────────────
 
 const CommandsPanel = ({ vehicle, classes, onClose }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [selected, setSelected] = useState(null);
   const [sending, setSending] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
@@ -473,7 +484,7 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
           <Typography className={classes.panelTitle}>Commandes</Typography>
           <Typography className={classes.panelSubtitle}>{vehicle?.name || '—'}</Typography>
         </Box>
-        <IconButton size="small" onClick={onClose} sx={{ color: '#94a3b8' }}><Close fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={onClose} sx={{ color: 'text.secondary' }}><Close fontSize="small" /></IconButton>
       </Box>
       <Box className={classes.panelBody}>
         <Box className={classes.commandGrid}>
@@ -483,12 +494,12 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
               <Box className={classes.commandIcon} sx={{ bgcolor: cmd.bg }}>
                 <Box sx={{ color: cmd.color, display: 'flex' }}>{cmd.icon}</Box>
               </Box>
-              <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#e2e8f0', textAlign: 'center' }}>{cmd.label}</Typography>
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: 'text.primary', textAlign: 'center' }}>{cmd.label}</Typography>
             </Box>
           ))}
         </Box>
       </Box>
-      <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
         <Button fullWidth variant="contained" disableElevation disabled={!selected || sending} onClick={sendCommand}
           sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, bgcolor: '#6366f1', '&:hover': { bgcolor: '#4f46e5' } }}>
           {sending ? 'Envoi…' : 'Envoyer la commande'}
@@ -523,6 +534,8 @@ const RIGHT_TOOLBAR = [
 const MainPageNew = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   const [searchValue, setSearchValue] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -650,7 +663,7 @@ const MainPageNew = () => {
                 </Box>
               ) : displayedVehicles.length === 0 ? (
                 <Box sx={{ textAlign: 'center', pt: 6 }}>
-                  <Typography sx={{ color: '#94a3b8', fontSize: '0.9rem' }}>Aucun véhicule trouvé</Typography>
+                  <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>Aucun véhicule trouvé</Typography>
                 </Box>
               ) : (
                 displayedVehicles.map((vehicle) => (

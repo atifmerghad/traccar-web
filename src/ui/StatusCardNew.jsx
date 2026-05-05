@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Stack } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   BatteryFull, BatteryChargingFull, BatteryAlert,
   ExpandLess, ExpandMore, SignalCellularAlt, Sensors, Visibility,
@@ -10,12 +11,10 @@ import EngineIcon from '../resources/images/data/engine.svg?react';
 
 const MAX_SPEED = 280;
 
-// Half-circle arc: left (180°) → clockwise through top (270°) → right (0°)
-// ViewBox 0 0 160 90, center cx=80 cy=82 radius=66
 const CX = 80;
 const CY = 82;
 const R = 66;
-const CIRCUMFERENCE = Math.PI * R; // ≈ 207.35 — used for dashoffset animation
+const CIRCUMFERENCE = Math.PI * R;
 const TRACK = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`;
 
 const pulseGlow = keyframes`
@@ -24,54 +23,57 @@ const pulseGlow = keyframes`
   100% { box-shadow: 0 0 0 0px rgba(34,197,94,0);    }
 `;
 
-const useStyles = makeStyles()(() => ({
-  card: {
-    position: 'fixed',
-    bottom: 12,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '95%',
-    maxWidth: 500,
-    borderRadius: 24,
-    background: 'rgba(10, 15, 30, 0.88)',
-    backdropFilter: 'blur(24px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-    border: '1px solid rgba(255,255,255,0.09)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
-    padding: '10px 14px 12px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-    zIndex: 1000,
-    overflow: 'hidden',
-  },
-  cardCollapsed: {
-    padding: '6px 14px',
-    maxWidth: 400,
-    width: 'auto',
-    gap: 0,
-  },
-  badge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 10,
-    padding: '3px 10px',
-  },
-  collapseBtn: {
-    width: 36,
-    height: 36,
-    color: '#94a3b8',
-    background: 'rgba(255,255,255,0.06)',
-    borderRadius: 10,
-    padding: 0,
-    flexShrink: 0,
-    '&:hover': { background: 'rgba(255,255,255,0.12)' },
-  },
-}));
+const useStyles = makeStyles()((theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    card: {
+      position: 'fixed',
+      bottom: 12,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '95%',
+      maxWidth: 500,
+      borderRadius: 24,
+      background: isDark ? 'rgba(10, 15, 30, 0.88)' : 'rgba(255,255,255,0.92)',
+      backdropFilter: 'blur(24px) saturate(160%)',
+      WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.09)' : theme.palette.divider}`,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+      padding: '10px 14px 12px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+      zIndex: 1000,
+      overflow: 'hidden',
+    },
+    cardCollapsed: {
+      padding: '6px 14px',
+      maxWidth: 400,
+      width: 'auto',
+      gap: 0,
+    },
+    badge: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      background: isDark ? 'rgba(255,255,255,0.07)' : theme.palette.action.hover,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
+      borderRadius: 10,
+      padding: '3px 10px',
+    },
+    collapseBtn: {
+      width: 36,
+      height: 36,
+      color: theme.palette.text.secondary,
+      background: isDark ? 'rgba(255,255,255,0.06)' : theme.palette.action.hover,
+      borderRadius: 10,
+      padding: 0,
+      flexShrink: 0,
+      '&:hover': { background: isDark ? 'rgba(255,255,255,0.12)' : theme.palette.action.selected },
+    },
+  };
+});
 
 const getBattery = (v) => {
   const n = parseFloat(v);
@@ -86,6 +88,8 @@ const speedColor = (s) => (s < 80 ? '#10b981' : s < 160 ? '#f59e0b' : '#ef4444')
 
 const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signalStrength = 3 }) => {
   const { classes } = useStyles();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [time, setTime] = useState('');
 
@@ -112,15 +116,15 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: ignitionActive ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)',
-    border: `1.5px solid ${ignitionActive ? 'rgba(34,197,94,0.35)' : 'rgba(255,255,255,0.08)'}`,
+    background: ignitionActive ? 'rgba(34,197,94,0.1)' : isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+    border: `1.5px solid ${ignitionActive ? 'rgba(34,197,94,0.35)' : theme.palette.divider}`,
     animation: ignitionActive ? `${pulseGlow} 2s ease-in-out infinite` : 'none',
     transition: 'background 0.4s ease, border-color 0.4s ease',
   };
 
   const engineIconStyle = {
     width: 22,
-    color: ignitionActive ? '#22c55e' : '#475569',
+    color: ignitionActive ? '#22c55e' : theme.palette.text.disabled,
     filter: ignitionActive ? 'drop-shadow(0 0 4px rgba(34,197,94,0.8))' : 'none',
     transition: 'all 0.4s ease',
   };
@@ -138,25 +142,25 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
                 {safeVoltage}V
               </Typography>
             </Box>
-            <Typography variant="caption" fontWeight={700} sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+            <Typography variant="caption" fontWeight={700} sx={{ color: theme.palette.text.disabled, fontSize: '0.7rem' }}>
               {temperature}°C
             </Typography>
           </Stack>
 
           <Stack direction="row" spacing={1} alignItems="center">
             <SignalCellularAlt sx={{ color: '#f59e0b', fontSize: 17 }} />
-            <Sensors sx={{ color: '#475569', fontSize: 17 }} />
+            <Sensors sx={{ color: theme.palette.text.disabled, fontSize: 17 }} />
             <Stack direction="row" alignItems="center" spacing="3px">
               <Box sx={{
                 width: 6, height: 6, borderRadius: '50%',
-                background: ignitionActive ? '#22c55e' : '#475569',
+                background: ignitionActive ? '#22c55e' : theme.palette.text.disabled,
                 animation: ignitionActive ? `${pulseGlow} 2s ease-in-out infinite` : 'none',
               }} />
               <EngineIcon style={engineIconStyle} />
             </Stack>
             <Box sx={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: isDark ? 'rgba(255,255,255,0.07)' : theme.palette.action.hover,
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : theme.palette.divider}`,
               borderRadius: 10,
               px: 1.5, py: '3px',
               display: 'flex', alignItems: 'baseline', gap: '3px',
@@ -164,7 +168,7 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
               <Typography fontWeight={900} sx={{ color: sColor, fontSize: '1rem', lineHeight: 1 }}>
                 {currentSpeed}
               </Typography>
-              <Typography sx={{ color: '#475569', fontSize: '0.52rem', fontWeight: 700 }}>km/h</Typography>
+              <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.52rem', fontWeight: 700 }}>km/h</Typography>
             </Box>
             <IconButton className={classes.collapseBtn} size="small" onClick={() => setIsCollapsed(false)}>
               <ExpandLess fontSize="small" />
@@ -184,15 +188,15 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
               </Typography>
             </Box>
 
-            <Typography fontWeight={900} sx={{ color: '#e2e8f0', fontSize: '0.78rem', letterSpacing: '1.5px' }}>
+            <Typography fontWeight={900} sx={{ color: theme.palette.text.primary, fontSize: '0.78rem', letterSpacing: '1.5px' }}>
               {time}
             </Typography>
 
             <Stack direction="row" spacing={0.75} alignItems="center">
-              <Sensors sx={{ color: '#475569', fontSize: 15 }} />
-              <Visibility sx={{ color: '#475569', fontSize: 15 }} />
+              <Sensors sx={{ color: theme.palette.text.disabled, fontSize: 15 }} />
+              <Visibility sx={{ color: theme.palette.text.disabled, fontSize: 15 }} />
               <SignalCellularAlt sx={{ color: '#f59e0b', fontSize: 15 }} />
-              <Typography variant="caption" fontWeight={800} sx={{ color: '#475569', fontSize: '0.62rem' }}>
+              <Typography variant="caption" fontWeight={800} sx={{ color: theme.palette.text.disabled, fontSize: '0.62rem' }}>
                 {signalStrength}
               </Typography>
               <IconButton className={classes.collapseBtn} size="small" onClick={() => setIsCollapsed(true)}>
@@ -210,7 +214,7 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
                 <EngineIcon style={engineIconStyle} />
               </Box>
               <Typography sx={{
-                color: ignitionActive ? '#22c55e' : '#475569',
+                color: ignitionActive ? '#22c55e' : theme.palette.text.disabled,
                 fontSize: '0.58rem', fontWeight: 800,
                 letterSpacing: '0.07em', textTransform: 'uppercase',
                 transition: 'color 0.3s',
@@ -219,12 +223,10 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
               </Typography>
             </Box>
 
-            {/* Speed arc (dashoffset technique → smooth CSS animation) */}
+            {/* Speed arc */}
             <Box sx={{ position: 'relative', width: 160, flexShrink: 0 }}>
               <svg viewBox="0 0 160 90" width={160} height={90}>
-                {/* Track */}
-                <path d={TRACK} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={8} strokeLinecap="round" />
-                {/* Fill — revealed left→right via strokeDashoffset */}
+                <path d={TRACK} fill="none" stroke={isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider} strokeWidth={8} strokeLinecap="round" />
                 <path
                   d={TRACK}
                   fill="none"
@@ -238,12 +240,10 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
                     transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease',
                   }}
                 />
-                {/* End-cap dots */}
-                <circle cx={CX - R} cy={CY} r={3} fill="rgba(255,255,255,0.18)" />
-                <circle cx={CX + R} cy={CY} r={3} fill="rgba(255,255,255,0.18)" />
+                <circle cx={CX - R} cy={CY} r={3} fill={isDark ? 'rgba(255,255,255,0.18)' : theme.palette.divider} />
+                <circle cx={CX + R} cy={CY} r={3} fill={isDark ? 'rgba(255,255,255,0.18)' : theme.palette.divider} />
               </svg>
 
-              {/* Speed readout centered below arc */}
               <Box sx={{
                 position: 'absolute', bottom: 2, left: 0, right: 0,
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -255,7 +255,7 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
                 }}>
                   {currentSpeed}
                 </Typography>
-                <Typography sx={{ color: '#475569', fontSize: '0.57rem', fontWeight: 700, letterSpacing: '0.1em' }}>
+                <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.57rem', fontWeight: 700, letterSpacing: '0.1em' }}>
                   KM/H
                 </Typography>
               </Box>
@@ -263,13 +263,13 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
 
             {/* Odometer */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', pb: '6px' }}>
-              <Typography sx={{ color: '#475569', fontSize: '0.57rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.57rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 ODO
               </Typography>
-              <Typography fontWeight={900} sx={{ color: '#e2e8f0', fontSize: '0.8rem' }}>
+              <Typography fontWeight={900} sx={{ color: theme.palette.text.primary, fontSize: '0.8rem' }}>
                 {(vehicle.odometer || 0).toLocaleString()}
               </Typography>
-              <Typography sx={{ color: '#475569', fontSize: '0.54rem', fontWeight: 700 }}>
+              <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.54rem', fontWeight: 700 }}>
                 KM
               </Typography>
             </Box>
@@ -302,28 +302,29 @@ const StatusCardNew = ({ vehicle, batteryVoltage = 12.0, temperature = 0, signal
 
 // ── MetricTile ────────────────────────────────────────────────────────────────
 const MetricTile = ({ label, value, unit, color, fraction }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const pct = `${Math.min(Math.max(Number(fraction) || 0, 0), 1) * 100}%`;
   return (
     <Box sx={{
       flex: 1, minWidth: 0,
-      background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : theme.palette.divider}`,
       borderRadius: '12px',
       pt: '7px', px: '5px', pb: '11px',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
       position: 'relative', overflow: 'hidden',
     }}>
-      <Typography sx={{ color: '#475569', fontSize: '0.54rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.54rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         {label}
       </Typography>
-      <Typography fontWeight={900} sx={{ color: '#e2e8f0', fontSize: '0.82rem', lineHeight: 1, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <Typography fontWeight={900} sx={{ color: theme.palette.text.primary, fontSize: '0.82rem', lineHeight: 1, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {value}
       </Typography>
-      <Typography sx={{ color: '#475569', fontSize: '0.52rem', fontWeight: 700 }}>
+      <Typography sx={{ color: theme.palette.text.disabled, fontSize: '0.52rem', fontWeight: 700 }}>
         {unit}
       </Typography>
-      {/* Progress accent bar */}
-      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: 'rgba(255,255,255,0.04)' }}>
+      <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: isDark ? 'rgba(255,255,255,0.04)' : theme.palette.action.hover }}>
         <Box sx={{
           width: pct, height: '100%',
           background: color,
