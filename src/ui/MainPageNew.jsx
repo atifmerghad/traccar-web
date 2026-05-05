@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import DeviceRow from './DeviceRow';
@@ -23,6 +24,7 @@ import MainToolbar from './MainToolbar';
 import StatusCardNew from './StatusCardNew';
 import PageLayout from './PageLayout';
 import MainMap from '../main/MainMap';
+import { map } from '../map/core/MapView';
 import useFilter from '../main/useFilter';
 import usePersistedState from '../common/util/usePersistedState';
 import { devicesActions, sessionActions } from '../store';
@@ -172,6 +174,11 @@ const useStyles = makeStyles()((theme) => { const isDark = theme.palette.mode ==
       flexShrink: 0,
     },
   },
+  toolbarBtnBlocked: {
+    background: 'rgba(239,68,68,0.18) !important',
+    border: '1px solid rgba(239,68,68,0.45) !important',
+    color: '#ef4444 !important',
+  },
   toolbarBtnActive: { background: '#6366f1 !important', color: '#fff !important' },
   panel: {
     position: 'absolute',
@@ -291,8 +298,84 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
   const isDark = theme.palette.mode === 'dark';
   const lat = vehicle?.position?.latitude;
   const lng = vehicle?.position?.longitude;
+  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
   const openGoogleMaps = () => { if (lat && lng) window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank'); };
   const openWaze = () => { if (lat && lng) window.open(`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`, '_blank'); };
+
+  const shareText = async (text) => {
+    const fallbackCopy = () => {
+      try {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.focus();
+        area.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(area);
+        return ok;
+      } catch {
+        return false;
+      }
+    };
+
+    try {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: vehicle?.name || 'Véhicule',
+            text,
+          });
+          return;
+        } catch (err) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setSnack({ open: true, msg: 'Données copiées dans le presse-papiers', severity: 'success' });
+        return;
+      }
+
+      if (fallbackCopy()) {
+        setSnack({ open: true, msg: 'Données copiées dans le presse-papiers', severity: 'success' });
+      } else {
+        setSnack({ open: true, msg: 'Partage non disponible sur ce navigateur', severity: 'warning' });
+      }
+    } catch {
+      if (fallbackCopy()) {
+        setSnack({ open: true, msg: 'Données copiées dans le presse-papiers', severity: 'success' });
+      } else {
+        setSnack({ open: true, msg: 'Partage non disponible sur ce navigateur', severity: 'warning' });
+      }
+    }
+  };
+
+  const handleBasicShare = () => {
+    const text = [
+      `Véhicule: ${vehicle?.name || '—'}`,
+      `Statut: ${vehicle?.status || '—'}`,
+      lat != null && lng != null ? `Position: ${lat.toFixed(5)}, ${lng.toFixed(5)}` : 'Position: non disponible',
+    ].join('\n');
+    shareText(text);
+  };
+
+  const handleCompleteShare = () => {
+    const attrs = vehicle?.position?.attributes || {};
+    const text = [
+      `Véhicule: ${vehicle?.name || '—'}`,
+      `ID: ${vehicle?.id || '—'}`,
+      `Statut: ${vehicle?.status || '—'}`,
+      `Vitesse: ${vehicle?.speed || 0} km/h`,
+      lat != null && lng != null ? `Position: ${lat.toFixed(5)}, ${lng.toFixed(5)}` : 'Position: non disponible',
+      `Batterie: ${attrs.battery || attrs.power || '—'}`,
+      `Odomètre: ${attrs.odometer || attrs.totalDistance || '—'}`,
+    ].join('\n');
+    shareText(text);
+  };
 
   return (
     <Box className={classes.panel}>
@@ -305,10 +388,10 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
       </Box>
       <Box className={classes.panelBody}>
         {[
-          { icon: <MapOutlined />, bg: 'rgba(59,130,246,0.15)', color: '#3b82f6', title: 'Données de Base', sub: 'Plaque, localisation et statut' },
-          { icon: <DirectionsCar />, bg: 'rgba(99,102,241,0.15)', color: '#6366f1', title: 'Données Complètes', sub: 'Toutes les informations du véhicule' },
+          { icon: <MapOutlined />, bg: 'rgba(59,130,246,0.15)', color: '#3b82f6', title: 'Données de Base', sub: 'Plaque, localisation et statut', onClick: handleBasicShare },
+          { icon: <DirectionsCar />, bg: 'rgba(99,102,241,0.15)', color: '#6366f1', title: 'Données Complètes', sub: 'Toutes les informations du véhicule', onClick: handleCompleteShare },
         ].map((item, i) => (
-          <Box key={i} className={classes.panelRow}>
+          <Box key={i} className={classes.panelRow} onClick={item.onClick}>
             <Box className={classes.panelRowIcon} sx={{ bgcolor: item.bg }}>
               <Box sx={{ color: item.color, display: 'flex' }}>{item.icon}</Box>
             </Box>
@@ -341,6 +424,29 @@ const SharePanel = ({ vehicle, classes, onClose }) => {
           <Box sx={{ color: 'text.disabled', fontSize: 20 }}>›</Box>
         </Box>
       </Box>
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={2500}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snack.severity}
+          sx={{
+            borderRadius: 2,
+            minWidth: 320,
+            maxWidth: 320,
+            '& .MuiAlert-message': {
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            },
+          }}
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        >
+          {snack.msg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
@@ -617,28 +723,12 @@ const CommandsPanel = ({ vehicle, classes, onClose }) => {
   );
 };
 
-// ─── Right toolbar config ─────────────────────────────────────────────────────
-
-const RIGHT_TOOLBAR = [
-  { key: 'refresh', Icon: Refresh, title: 'Actualiser' },
-  null,
-  { key: 'share', Icon: Share, title: 'Partager' },
-  { key: 'geofence', Icon: FmdGoodOutlined, title: 'Géofence' },
-  { key: 'settings', Icon: MapOutlined, title: 'Carte' },
-  { key: 'commands', Icon: SettingsRemoteOutlined, title: 'Commandes' },
-  { key: 'alerts', Icon: NotificationsOutlined, title: 'Alertes' },
-  null,
-  { key: 'zoomIn', Icon: ZoomIn, title: 'Zoom +' },
-  { key: 'zoomOut', Icon: ZoomOut, title: 'Zoom −' },
-  { key: 'locate', Icon: MyLocationOutlined, title: 'Ma position' },
-  { key: 'history', Icon: HistoryOutlined, title: 'Historique' },
-];
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const MainPageNew = () => {
   const { classes } = useStyles();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -647,6 +737,7 @@ const MainPageNew = () => {
   const [activePanel, setActivePanel] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [loadingData, setLoadingData] = useState(false);
+  const [locationBlocked, setLocationBlocked] = useState(false);
 
   const [, setFilter] = usePersistedState('filter', { statuses: [], groups: [] });
   const [filterSort] = usePersistedState('filterSort', '');
@@ -719,9 +810,84 @@ const MainPageNew = () => {
   const totalCount = Object.keys(devices).length;
   const selectedVehicle = useMemo(() => vehicles.find((v) => v.id === selectedDeviceId?.toString()) || null, [vehicles, selectedDeviceId]);
   const togglePanel = (key) => setActivePanel((p) => (p === key ? null : key));
-  const handleToolbarClick = (key) => {
-    if (key === 'refresh') { fetchData(); return; }
-    if (['share', 'alerts', 'geofence', 'settings', 'commands'].includes(key)) togglePanel(key);
+
+  const zoomMap = useCallback((delta) => {
+    if (!map?.getZoom) return;
+    const nextZoom = map.getZoom() + delta;
+    map.easeTo({ zoom: nextZoom, duration: 180 });
+  }, []);
+
+  const centerOnCurrentLocation = useCallback(() => {
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+        if (status.state === 'denied') setLocationBlocked(true);
+      }).catch(() => { });
+    }
+
+    const geolocateBtn = map?.getContainer?.()
+      ?.querySelector?.('.maplibregl-ctrl-geolocate');
+    if (geolocateBtn && !geolocateBtn.disabled) {
+      geolocateBtn.click();
+      return;
+    }
+
+    if (selectedVehicle?.position?.latitude != null && selectedVehicle?.position?.longitude != null) {
+      map?.easeTo?.({
+        center: [selectedVehicle.position.longitude, selectedVehicle.position.latitude],
+        duration: 260,
+      });
+      return;
+    }
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setLocationBlocked(false);
+      map?.easeTo?.({
+        center: [pos.coords.longitude, pos.coords.latitude],
+        duration: 260,
+      });
+    }, (error) => {
+      if (error?.code === 1) {
+        setLocationBlocked(true);
+      }
+    });
+  }, [selectedVehicle]);
+
+  const rightToolbarItems = useMemo(() => ([
+    { key: 'refresh', Icon: Refresh, title: 'Actualiser', onClick: () => fetchData() },
+    null,
+    {
+      key: 'share', Icon: Share, title: 'Partager', onClick: () => togglePanel('share'),
+      disabled: !selectedVehicle,
+    },
+    {
+      key: 'geofence', Icon: FmdGoodOutlined, title: 'Géofence', onClick: () => togglePanel('geofence'),
+      disabled: !selectedVehicle,
+    },
+    { key: 'settings', Icon: MapOutlined, title: 'Carte', onClick: () => togglePanel('settings') },
+    {
+      key: 'commands', Icon: SettingsRemoteOutlined, title: 'Commandes', onClick: () => togglePanel('commands'),
+      disabled: !selectedVehicle,
+    },
+    {
+      key: 'alerts', Icon: NotificationsOutlined, title: 'Alertes', onClick: () => togglePanel('alerts'),
+      disabled: !selectedVehicle,
+    },
+    null,
+    { key: 'zoomIn', Icon: ZoomIn, title: 'Zoom +', onClick: () => zoomMap(1) },
+    { key: 'zoomOut', Icon: ZoomOut, title: 'Zoom −', onClick: () => zoomMap(-1) },
+    { key: 'locate', Icon: MyLocationOutlined, title: 'Ma position', onClick: centerOnCurrentLocation },
+    {
+      key: 'history',
+      Icon: HistoryOutlined,
+      title: 'Historique',
+      onClick: () => selectedVehicle && navigate(`/replay-new?deviceId=${selectedVehicle.id}`),
+      disabled: !selectedVehicle,
+    },
+  ]), [fetchData, selectedVehicle, navigate, centerOnCurrentLocation, zoomMap]);
+
+  const handleToolbarClick = (item) => {
+    if (item.disabled) return;
+    item.onClick?.();
   };
   const selectedPosition = filteredPositions.find((p) => selectedDeviceId && p.deviceId === selectedDeviceId);
   const onEventsClick = useCallback(() => { }, []);
@@ -795,15 +961,23 @@ const MainPageNew = () => {
 
         {!activePanel && (
           <Box className={classes.rightToolbar}>
-            {RIGHT_TOOLBAR.map((item, i) => {
+            {rightToolbarItems.map((item, i) => {
               if (item === null) return <Box key={`div-${i}`} className={classes.toolbarDivider} />;
-              const { key, Icon, title } = item;
+              const { key, Icon, title, disabled } = item;
               const isActive = activePanel === key;
+              const isLocateBlocked = key === 'locate' && locationBlocked;
               return (
                 <Tooltip key={key} title={title} placement="left">
-                  <IconButton size="small" className={`${classes.toolbarBtn} ${isActive ? classes.toolbarBtnActive : ''}`} onClick={() => handleToolbarClick(key)}>
-                    <Icon fontSize="small" />
-                  </IconButton>
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={disabled}
+                      className={`${classes.toolbarBtn} ${isActive ? classes.toolbarBtnActive : ''} ${isLocateBlocked ? classes.toolbarBtnBlocked : ''}`}
+                      onClick={() => handleToolbarClick(item)}
+                    >
+                      <Icon fontSize="small" />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               );
             })}
