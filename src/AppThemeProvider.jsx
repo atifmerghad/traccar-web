@@ -19,13 +19,20 @@ const cache = {
 
 const AppThemeProvider = ({ children }) => {
   const server = useSelector((state) => state.session.server);
-  const { direction } = useLocalization();
+  const userDarkMode = useSelector((state) => state.session?.user?.attributes?.darkMode);
+  const { direction, language } = useLocalization();
 
-  const serverDarkMode = true;//server?.attributes?.darkMode;
+  const serverDarkMode = server?.attributes?.darkMode;
   const preferDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const darkMode = serverDarkMode !== undefined ? serverDarkMode : preferDarkMode;
+  // Precedence: explicit user choice → admin server default → system preference.
+  const darkMode =
+    userDarkMode !== undefined
+      ? userDarkMode
+      : serverDarkMode !== undefined
+        ? serverDarkMode
+        : preferDarkMode;
 
-  const themeInstance = theme(server, darkMode, direction);
+  const themeInstance = theme(server, darkMode, direction, language);
 
   return (
     <CacheProvider value={cache[direction]}>

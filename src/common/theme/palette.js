@@ -1,6 +1,13 @@
 import { grey, green, indigo } from '@mui/material/colors';
 
-const validatedColor = (color) => (/^#([0-9A-Fa-f]{3}){1,2}$/.test(color) ? color : null);
+const validatedColor = (color) => {
+  if (!color || typeof color !== 'string') return null;
+  const value = color.trim();
+  if (!value) return null;
+  if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(value)) return value;
+  if (typeof window !== 'undefined' && window.CSS?.supports?.('color', value)) return value;
+  return null;
+};
 
 export default (server, darkMode) => ({
   mode: darkMode ? 'dark' : 'light',

@@ -16,6 +16,83 @@ export default {
       sizeMedium: {
         height: '40px',
       },
+      containedPrimary: ({ theme }) => ({
+        backgroundColor: theme.palette.primary.main,
+      }),
+      outlinedPrimary: ({ theme }) => ({
+        borderColor: theme.palette.primary.main,
+        color: theme.palette.primary.main,
+      }),
+      textPrimary: ({ theme }) => ({
+        color: theme.palette.primary.main,
+      }),
+      containedSecondary: ({ theme }) => ({
+        backgroundColor: theme.palette.secondary.main,
+      }),
+      outlinedSecondary: ({ theme }) => ({
+        borderColor: theme.palette.secondary.main,
+        color: theme.palette.secondary.main,
+      }),
+      textSecondary: ({ theme }) => ({
+        color: theme.palette.secondary.main,
+      }),
+    },
+  },
+  MuiIconButton: {
+    styleOverrides: {
+      colorPrimary: ({ theme }) => ({
+        color: theme.palette.primary.main,
+      }),
+      colorSecondary: ({ theme }) => ({
+        color: theme.palette.secondary.main,
+      }),
+    },
+  },
+  MuiFab: {
+    styleOverrides: {
+      primary: ({ theme }) => ({
+        backgroundColor: theme.palette.primary.main,
+      }),
+      secondary: ({ theme }) => ({
+        backgroundColor: theme.palette.secondary.main,
+      }),
+    },
+  },
+  MuiSwitch: {
+    styleOverrides: {
+      switchBase: ({ theme }) => ({
+        '&.Mui-checked': {
+          color: theme.palette.primary.main,
+        },
+        '&.Mui-checked + .MuiSwitch-track': {
+          backgroundColor: theme.palette.primary.main,
+        },
+      }),
+    },
+  },
+  MuiSlider: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        color: theme.palette.primary.main,
+      }),
+    },
+  },
+  MuiChip: {
+    styleOverrides: {
+      filledPrimary: ({ theme }) => ({
+        backgroundColor: theme.palette.primary.main,
+      }),
+      outlinedPrimary: ({ theme }) => ({
+        borderColor: theme.palette.primary.main,
+        color: theme.palette.primary.main,
+      }),
+      filledSecondary: ({ theme }) => ({
+        backgroundColor: theme.palette.secondary.main,
+      }),
+      outlinedSecondary: ({ theme }) => ({
+        borderColor: theme.palette.secondary.main,
+        color: theme.palette.secondary.main,
+      }),
     },
   },
   MuiFormControl: {

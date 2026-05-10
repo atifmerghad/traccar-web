@@ -214,8 +214,8 @@ export const LocalizationProvider = ({ children }) => {
   });
 
   const [localLanguage, setLocalLanguage] = usePersistedState('language', getDefaultLanguage());
-
-  const language = remoteLanguage || localLanguage;
+  const hasLocalLanguageOverride = window.localStorage.getItem('language') !== null;
+  const language = hasLocalLanguageOverride ? localLanguage : remoteLanguage || localLanguage;
 
   const direction = /^(ar|he|fa)$/.test(language) ? 'rtl' : 'ltr';
 

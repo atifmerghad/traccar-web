@@ -1,4 +1,4 @@
-import { Route, Routes, useSearchParams } from 'react-router-dom';
+import { Route, Routes, useSearchParams, Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import MainPage from './main/MainPage';
 import CombinedReportPage from './reports/CombinedReportPage';
@@ -33,7 +33,6 @@ import CommandPage from './settings/CommandPage';
 import StatisticsPage from './reports/StatisticsPage';
 import LoginPage from './login/LoginPage';
 import RegisterPage from './login/RegisterPage';
-import ResetPasswordPage from './login/ResetPasswordPage';
 import GeofencesPage from './other/GeofencesPage';
 import GeofencePage from './settings/GeofencePage';
 import { useEffectAsync } from './reactHelper';
@@ -60,17 +59,34 @@ import { useLocalization } from './common/components/LocalizationProvider';
 import fetchOrThrow from './common/util/fetchOrThrow';
 import AuditPage from './reports/AuditPage';
 
-import MainPageNew from './ui/MainPageNew';
-import LoginDemo from './ui/LoginDemo';
-import DashboardPage from './ui/DashboardPage';
-import ReplayPageNew from './ui/ReplayPageNew';
-import SettingsPage from './ui/SettingsPage';
-import MaintenancePageNew from './ui/MaintenancePageNew';
-import ReportPageNew from './ui/reports/ReportPageNew';
-import GraphPage from './ui/GraphPage';
-import UsersPageNew from './ui/UsersPage';
+import MainPageV2 from './ui/live/MainPageV2';
+import LoginV2 from './ui/auth/LoginV2';
+import RegisterV2 from './ui/auth/RegisterV2';
+import ResetPasswordV2 from './ui/auth/ResetPasswordV2';
+import DashboardPage from './ui/live/DashboardPage';
+import ReplayPageV2 from './ui/live/ReplayPageV2';
+import SettingsPage from './ui/system/SettingsPage';
+import MaintenancePageV2 from './ui/manage/MaintenancePageV2';
+import ReportPageV2 from './ui/reports/ReportPageV2';
+import GraphPage from './ui/reports/GraphPage';
+import UsersPageV2 from './ui/manage/UsersPage';
+import NotificationsPageV2 from './ui/manage/NotificationsPageV2';
+import DriversPageV2 from './ui/manage/DriversPageV2';
+import GroupsPageV2 from './ui/manage/GroupsPageV2';
+import DevicesPageV2 from './ui/manage/DevicesPageV2';
+import CommandsPageV2 from './ui/manage/CommandsPageV2';
+import CalendarsPageV2 from './ui/manage/CalendarsPageV2';
+import ComputedAttributesPageV2 from './ui/manage/ComputedAttributesPageV2';
+import PreferencesPageV2 from './ui/system/PreferencesPageV2';
+import ServerPageV2 from './ui/system/ServerPageV2';
+import AnnouncementPageV2 from './ui/system/AnnouncementPageV2';
 
-
+/** Keeps `?passwordReset=` (and any other query) when moving to the V2 reset page. */
+const ResetPasswordQueryRedirect = () => {
+  const [sp] = useSearchParams();
+  const q = sp.toString();
+  return <Navigate to={q ? `/reset-password-new?${q}` : '/reset-password-new'} replace />;
+};
 
 const Navigation = () => {
   const dispatch = useDispatch();
@@ -124,11 +140,13 @@ const Navigation = () => {
   }
   return (
     <Routes>
-      <Route path="/login-new" element={<LoginDemo />} />
+      <Route path="/login-new" element={<LoginV2 />} />
+      <Route path="/register-new" element={<RegisterV2 />} />
+      <Route path="/reset-password-new" element={<ResetPasswordV2 />} />
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordQueryRedirect />} />
       <Route path="/change-server" element={<ChangeServerPage />} />
       <Route path="/" element={<App />}>
         <Route index element={<MainPage />} />
@@ -140,17 +158,24 @@ const Navigation = () => {
         <Route path="geofences" element={<GeofencesPage />} />
         <Route path="emulator" element={<EmulatorPage />} />
 
-        <Route path="/map" element={<MainPageNew />} />
+        <Route path="/map" element={<MainPageV2 />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/settings-page" element={<SettingsPage />} />
-        <Route path="/maintenances-page" element={<MaintenancePageNew />} />
-        <Route path="/reports-page" element={<ReportPageNew />} />
+        <Route path="/maintenances-page" element={<MaintenancePageV2 />} />
+        <Route path="/reports-page" element={<ReportPageV2 />} />
         <Route path="/graph-page" element={<GraphPage />} />
-        <Route path="replay-new" element={<ReplayPageNew />} />
-        <Route path="/users-new" element={<UsersPageNew />} />
-
-
-
+        <Route path="replay-new" element={<ReplayPageV2 />} />
+        <Route path="/users-new" element={<UsersPageV2 />} />
+        <Route path="/notifications-new" element={<NotificationsPageV2 />} />
+        <Route path="/drivers-new" element={<DriversPageV2 />} />
+        <Route path="/groups-new" element={<GroupsPageV2 />} />
+        <Route path="/devices-new" element={<DevicesPageV2 />} />
+        <Route path="/commands-new" element={<CommandsPageV2 />} />
+        <Route path="/calendars-new" element={<CalendarsPageV2 />} />
+        <Route path="/attributes-new" element={<ComputedAttributesPageV2 />} />
+        <Route path="/preferences-new" element={<PreferencesPageV2 />} />
+        <Route path="/server-new" element={<ServerPageV2 />} />
+        <Route path="/announcements-new" element={<AnnouncementPageV2 />} />
 
         <Route path="settings">
           <Route path="accumulators/:deviceId" element={<AccumulatorsPage />} />
