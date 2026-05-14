@@ -99,7 +99,7 @@ const MapView = ({ children }) => {
 
   useEffect(() => {
     const attribution = new maplibregl.AttributionControl({ compact: true });
-    const navigation = new maplibregl.NavigationControl();
+    const navigation = new maplibregl.NavigationControl({ showZoom: false, showCompass: false });
     map.addControl(attribution, theme.direction === 'rtl' ? 'bottom-left' : 'bottom-right');
     map.addControl(navigation, theme.direction === 'rtl' ? 'top-left' : 'top-right');
     map.addControl(switcher, theme.direction === 'rtl' ? 'top-left' : 'top-right');

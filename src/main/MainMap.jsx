@@ -53,12 +53,14 @@ const MainMap = ({ filteredPositions, selectedPosition, onEventsClick }) => {
         <MapSelectedDevice />
         <PoiMap />
       </MapView>
+       {/*
       <MapScale />
       <MapCurrentLocation />
       <MapGeocoder />
       {!features.disableEvents && (
         <MapNotification enabled={eventsAvailable} onClick={onEventsClick} />
       )}
+      */}
       {desktop && (
         <MapPadding
           start={

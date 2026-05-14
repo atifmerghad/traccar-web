@@ -26,7 +26,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import {
   Search,
   Edit,
-  DeleteOutline,
+  DeleteOutlineOutlined as DeleteOutline,
   Close,
   Add,
   FolderOutlined,

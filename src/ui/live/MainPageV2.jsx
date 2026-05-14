@@ -17,6 +17,10 @@ import {
   CircularProgress,
   useMediaQuery,
   InputAdornment,
+  Paper,
+  List,
+  ListItemButton,
+  ListItemText,
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import {
@@ -45,6 +49,10 @@ import {
   ZoomOut,
   MyLocationOutlined,
   HistoryOutlined,
+  CenterFocusStrong,
+  Navigation,
+  Search,
+  Clear,
 } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
 import { useDispatch, useSelector } from 'react-redux';
@@ -69,6 +77,7 @@ import {
   speedUnitString,
 } from '../../common/util/converter';
 import { useAttributePreference } from '../../common/util/preferences';
+import dimensions from '../../common/theme/dimensions';
 import { useEffectAsync } from '../../reactHelper';
 import { prefixString } from '../../common/util/stringUtils';
 
@@ -248,6 +257,7 @@ const useStyles = makeStyles()((theme) => {
   return {
     mainContainer: {
       flex: 1,
+      minHeight: 0,
       position: 'relative',
       display: 'flex',
       flexDirection: 'column',
@@ -381,35 +391,112 @@ const useStyles = makeStyles()((theme) => {
       },
     },
     mobileSearchDock: {
-      position: 'absolute',
-      top: theme.spacing(1.25),
+      position: 'fixed',
+      top: `calc(${theme.spacing(1.25)} + env(safe-area-inset-top, 0px))`,
       left: theme.spacing(1.25),
       right: theme.spacing(1.25),
-      zIndex: 1003,
+      zIndex: 1250,
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+      pointerEvents: 'none',
+      '& > *': {
+        pointerEvents: 'auto',
+      },
+      [theme.breakpoints.down('sm')]: {
+        top: `calc(${theme.spacing(1)} + env(safe-area-inset-top, 0px))`,
+        left: theme.spacing(1),
+        right: theme.spacing(1),
+      },
     },
-    mobileSearchResults: {
-      marginTop: theme.spacing(0.75),
-      maxHeight: 260,
-      overflowY: 'auto',
-      borderRadius: theme.spacing(1.25),
-      border: `1px solid ${theme.palette.divider}`,
+    mobileSearchPaper: {
+      borderRadius: theme.spacing(2),
+      overflow: 'hidden',
+      border: `1px solid ${isDark ? alpha(theme.palette.common.white, 0.1) : theme.palette.divider}`,
       backgroundColor: isDark
-        ? alpha(theme.palette.background.default, 0.94)
-        : alpha(theme.palette.background.paper, 0.96),
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      boxShadow: `0 ${theme.spacing(1)} ${theme.spacing(3)} ${alpha(theme.palette.common.black, 0.35)}`,
+        ? alpha(theme.palette.background.paper, 0.92)
+        : alpha(theme.palette.background.paper, 0.98),
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: isDark
+        ? `0 ${theme.spacing(0.5)} ${theme.spacing(3)} ${alpha(theme.palette.common.black, 0.55)}`
+        : `0 ${theme.spacing(0.5)} ${theme.spacing(2.5)} ${alpha(theme.palette.common.black, 0.12)}`,
     },
-    mobileSearchItem: {
-      display: 'flex',
+    mobileSearchFieldWrap: {
+      padding: theme.spacing(1.25),
+    },
+    mobileSearchField: {
+      '& .MuiOutlinedInput-root': {
+        borderRadius: theme.spacing(1.25),
+        backgroundColor: isDark
+          ? alpha(theme.palette.common.white, 0.06)
+          : alpha(theme.palette.common.black, 0.03),
+        fontSize: theme.typography.body2.fontSize,
+        '& fieldset': {
+          borderColor: isDark ? alpha(theme.palette.common.white, 0.12) : theme.palette.divider,
+        },
+        '&:hover fieldset': {
+          borderColor: isDark
+            ? alpha(theme.palette.common.white, 0.2)
+            : theme.palette.text.disabled,
+        },
+        '&.Mui-focused fieldset': {
+          borderWidth: 2,
+          borderColor: theme.palette.primary.main,
+        },
+      },
+      '& .MuiInputBase-input': {
+        paddingTop: theme.spacing(1.375),
+        paddingBottom: theme.spacing(1.375),
+      },
+    },
+    mobileSearchList: {
+      maxHeight: 'min(52vh, 380px)',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      touchAction: 'manipulation',
+      paddingTop: theme.spacing(0.25),
+      paddingBottom: theme.spacing(0.5),
+    },
+    mobileSearchListItem: {
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: theme.spacing(1.25),
-      padding: theme.spacing(1.25, 1.5),
-      borderBottom: `1px solid ${theme.palette.divider}`,
-      cursor: 'pointer',
-      '&:last-child': { borderBottom: 'none' },
-      '&:hover': { backgroundColor: theme.palette.action.hover },
+      minHeight: theme.spacing(7),
+      paddingTop: theme.spacing(0.75),
+      paddingBottom: theme.spacing(0.75),
+      paddingLeft: theme.spacing(1.5),
+      paddingRight: theme.spacing(1),
+      borderRadius: 0,
+      '&.Mui-selected': {
+        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+        '&:hover': {
+          backgroundColor: alpha(theme.palette.primary.main, 0.18),
+        },
+      },
+    },
+    mobileSearchRowActions: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexShrink: 0,
+      gap: theme.spacing(0.75),
+      marginLeft: theme.spacing(0.5),
+    },
+    mobileSearchActionBtn: {
+      flex: '0 0 auto',
+      minWidth: 44,
+      width: 44,
+      minHeight: 44,
+      padding: 0,
+      borderRadius: theme.spacing(1),
+      textTransform: 'none',
+      borderWidth: 1.5,
+      touchAction: 'manipulation',
+      boxShadow: 'none',
+      '& .MuiSvgIcon-root': {
+        fontSize: 22,
+      },
+      '&:active': {
+        transform: 'scale(0.98)',
+      },
     },
     toolbarDivider: {
       height: 1,
@@ -1546,7 +1633,6 @@ const MainPageV2 = () => {
     const value = t(key);
     return value === key ? fallback : value;
   };
-  const isDark = theme.palette.mode === 'dark';
   const mobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [searchValue, setSearchValue] = useState('');
@@ -1571,6 +1657,7 @@ const MainPageV2 = () => {
   const [filteredDevices, setFilteredDevices] = useState([]);
   const speedUnit = useAttributePreference('speedUnit', 'kn');
   const distanceUnit = useAttributePreference('distanceUnit', 'km');
+  const selectZoom = useAttributePreference('web.selectZoom', 10);
 
   const fetchData = useCallback(
     async (silent = false) => {
@@ -1717,14 +1804,18 @@ const MainPageV2 = () => {
   );
 
   useEffect(() => {
-    if (!followDeviceId) return;
-    const followed = vehicles.find((v) => v.id === followDeviceId);
-    if (!followed?.position?.latitude || !followed?.position?.longitude) return;
-    map?.easeTo?.({
+    if (!followDeviceId || !map?.getZoom || !map?.easeTo) return;
+    const followed = vehicles.find((v) => String(v.id) === String(followDeviceId));
+    if (followed?.position?.latitude == null || followed?.position?.longitude == null) {
+      return;
+    }
+    map.easeTo({
       center: [followed.position.longitude, followed.position.latitude],
+      zoom: Math.max(map.getZoom(), selectZoom),
+      offset: [0, -dimensions.popupMapOffset / 2],
       duration: 450,
     });
-  }, [followDeviceId, vehicles]);
+  }, [followDeviceId, vehicles, selectZoom]);
 
   const zoomMap = useCallback((delta) => {
     if (!map?.getZoom) return;
@@ -1849,7 +1940,7 @@ const MainPageV2 = () => {
   const mobileSearchResults = useMemo(() => {
     const q = mobileSearchValue.trim().toLowerCase();
     const base = q ? vehicles.filter((v) => v.name.toLowerCase().includes(q)) : vehicles;
-    return base.slice(0, 8);
+    return base;
   }, [mobileSearchValue, vehicles]);
 
   useEffect(() => {
@@ -1957,70 +2048,171 @@ const MainPageV2 = () => {
         )}
         {sidebarCollapsed && mobile && (
           <Box className={classes.mobileSearchDock}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder={tt('sharedSearch', 'Search')}
-              value={mobileSearchValue}
-              onFocus={() => setMobileSearchOpen(true)}
-              onBlur={() => setTimeout(() => setMobileSearchOpen(false), 120)}
-              onChange={(e) => {
-                setMobileSearchValue(e.target.value);
-                setMobileSearchOpen(true);
-              }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <DirectionsCar sx={{ fontSize: 16, color: 'text.disabled' }} />
-                    </InputAdornment>
-                  ),
-                  sx: {
-                    borderRadius: theme.spacing(1.375),
-                    backgroundColor: isDark
-                      ? alpha(theme.palette.background.default, 0.88)
-                      : alpha(theme.palette.common.white, 0.9),
-                    border: `1px solid ${theme.palette.divider}`,
-                  },
-                },
-              }}
-            />
-            {mobileSearchOpen && (
-              <Box className={classes.mobileSearchResults}>
-                {mobileSearchResults.length === 0 ? (
-                  <Typography
-                    sx={{ px: 1.5, py: 1.2, fontSize: '0.8rem', color: 'text.secondary' }}
+            <Paper className={classes.mobileSearchPaper} elevation={0} component="div">
+              <Box className={classes.mobileSearchFieldWrap}>
+                <TextField
+                  fullWidth
+                  size="medium"
+                  className={classes.mobileSearchField}
+                  placeholder={tt('sharedSearch', 'Search')}
+                  value={mobileSearchValue}
+                  id="map-mobile-search-input"
+                  autoComplete="off"
+                  name="map-device-search"
+                  slotProps={{
+                    htmlInput: {
+                      autoCorrect: 'off',
+                      autoCapitalize: 'none',
+                      spellCheck: false,
+                      enterKeyHint: 'search',
+                      'aria-expanded': mobileSearchOpen,
+                      'aria-controls': 'map-mobile-search-listbox',
+                    },
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search sx={{ fontSize: 20, color: 'text.secondary', ml: 0.25 }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: mobileSearchValue ? (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            aria-label={t('reportClear')}
+                            edge="end"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setMobileSearchValue('');
+                              setMobileSearchOpen(true);
+                            }}
+                          >
+                            <Clear sx={{ fontSize: 18 }} />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : null,
+                    },
+                  }}
+                  onFocus={() => setMobileSearchOpen(true)}
+                  onBlur={() => setTimeout(() => setMobileSearchOpen(false), 200)}
+                  onChange={(e) => {
+                    setMobileSearchValue(e.target.value);
+                    setMobileSearchOpen(true);
+                  }}
+                />
+              </Box>
+              {mobileSearchOpen && (
+                <>
+                  <Divider />
+                  <List
+                    id="map-mobile-search-listbox"
+                    role="listbox"
+                    aria-label={tt('deviceTitle', 'Devices')}
+                    dense
+                    disablePadding
+                    className={classes.mobileSearchList}
+                    onMouseDown={(e) => e.preventDefault()}
                   >
-                    {tt('sharedNoData', 'No data')}
-                  </Typography>
-                ) : (
-                  mobileSearchResults.map((v) => (
-                    <Box
-                      key={v.id}
-                      className={classes.mobileSearchItem}
-                      onMouseDown={() => {
-                        focusVehicleOnMap(v);
-                        setMobileSearchValue(v.name);
-                        setMobileSearchOpen(false);
-                      }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          sx={{ fontSize: '0.84rem', fontWeight: 700, color: 'text.primary' }}
-                          noWrap
-                        >
-                          {v.name}
-                        </Typography>
-                        <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }} noWrap>
-                          {v.status} · {v.speed || 0} {speedUnitString(speedUnit, t)}
+                    {mobileSearchResults.length === 0 ? (
+                      <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          {vehicles.length === 0 ? t('devicesEmptyTitle') : t('graphNoData')}
                         </Typography>
                       </Box>
-                      <ChevronRight sx={{ fontSize: 18, color: 'text.disabled', flexShrink: 0 }} />
-                    </Box>
-                  ))
-                )}
-              </Box>
-            )}
+                    ) : (
+                      mobileSearchResults.map((v) => {
+                        const selected = String(selectedDeviceId) === String(v.id);
+                        return (
+                          <ListItemButton
+                            key={v.id}
+                            role="option"
+                            aria-selected={selected}
+                            selected={selected}
+                            className={classes.mobileSearchListItem}
+                            onMouseDown={() => {
+                              focusVehicleOnMap(v);
+                              setMobileSearchValue(v.name);
+                              setMobileSearchOpen(false);
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                width: '100%',
+                                minWidth: 0,
+                                gap: 0.5,
+                              }}
+                            >
+                              <ListItemText
+                                primary={v.name}
+                                secondary={`${v.status} · ${v.speed || 0} ${speedUnitString(speedUnit, t)}`}
+                                sx={{ flex: 1, minWidth: 0, my: 0 }}
+                                slotProps={{
+                                  primary: {
+                                    noWrap: true,
+                                    sx: { fontWeight: 700, fontSize: '0.9rem' },
+                                  },
+                                  secondary: {
+                                    noWrap: true,
+                                    sx: { fontSize: '0.75rem', mt: 0.25 },
+                                  },
+                                }}
+                              />
+                              <Box
+                                className={classes.mobileSearchRowActions}
+                                onMouseDown={(e) => e.preventDefault()}
+                              >
+                                <Button
+                                  type="button"
+                                  variant="outlined"
+                                  color="primary"
+                                  size="small"
+                                  className={classes.mobileSearchActionBtn}
+                                  aria-label={tt('mapOnSelect', 'Center')}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setFollowDeviceId(null);
+                                    focusVehicleOnMap(v);
+                                    setMobileSearchValue(v.name);
+                                    setMobileSearchOpen(false);
+                                  }}
+                                >
+                                  <CenterFocusStrong />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant={followDeviceId === v.id ? 'contained' : 'outlined'}
+                                  color={followDeviceId === v.id ? 'success' : 'primary'}
+                                  size="small"
+                                  disableElevation
+                                  className={classes.mobileSearchActionBtn}
+                                  aria-label={tt('deviceFollow', 'Follow')}
+                                  aria-pressed={followDeviceId === v.id}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (followDeviceId === v.id) {
+                                      setFollowDeviceId(null);
+                                    } else {
+                                      startFollowVehicle(v);
+                                    }
+                                    setMobileSearchValue(v.name);
+                                    setMobileSearchOpen(false);
+                                  }}
+                                >
+                                  <Navigation />
+                                </Button>
+                              </Box>
+                            </Box>
+                          </ListItemButton>
+                        );
+                      })
+                    )}
+                  </List>
+                </>
+              )}
+            </Paper>
           </Box>
         )}
 

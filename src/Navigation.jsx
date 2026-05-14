@@ -140,11 +140,11 @@ const Navigation = () => {
   }
   return (
     <Routes>
-      <Route path="/login-new" element={<LoginV2 />} />
+      <Route path="/login-old" element={<LoginPage />} />
       <Route path="/register-new" element={<RegisterV2 />} />
       <Route path="/reset-password-new" element={<ResetPasswordV2 />} />
 
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<LoginV2 />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordQueryRedirect />} />
       <Route path="/change-server" element={<ChangeServerPage />} />

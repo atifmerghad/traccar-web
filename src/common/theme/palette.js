@@ -12,26 +12,30 @@ const validatedColor = (color) => {
 export default (server, darkMode) => ({
   mode: darkMode ? 'dark' : 'light',
   background: {
-    default: darkMode ? '#080d1a' : grey[50],
-    paper: darkMode ? '#0f172a' : '#ffffff',
+    // Dark: near-neutral canvas with a slight cool cast; paper is a clear step up for cards/panels.
+    default: darkMode ? '#0d1117' : grey[50],
+    paper: darkMode ? '#161b22' : '#ffffff',
   },
   text: {
-    primary: darkMode ? '#f1f5f9' : grey[900],
-    secondary: darkMode ? '#94a3b8' : grey[600],
-    disabled: darkMode ? '#475569' : grey[400],
+    primary: darkMode ? '#e6edf3' : grey[900],
+    secondary: darkMode ? '#8b949e' : grey[600],
+    disabled: darkMode ? '#484f58' : grey[400],
   },
-  divider: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)',
+  divider: darkMode ? 'rgba(230, 237, 243, 0.12)' : 'rgba(0, 0, 0, 0.12)',
   primary: {
-    main: validatedColor(server?.attributes?.colorPrimary) || (darkMode ? '#6366f1' : indigo[900]),
+    // Dark: lighter indigo for contrast on deep surfaces; light: deep indigo.
+    main: validatedColor(server?.attributes?.colorPrimary) || (darkMode ? '#818cf8' : indigo[900]),
   },
   secondary: {
-    main: validatedColor(server?.attributes?.colorSecondary) || (darkMode ? '#22c55e' : green[800]),
+    main: validatedColor(server?.attributes?.colorSecondary) || (darkMode ? '#56d364' : green[800]),
   },
+  // State-layer opacities aligned with Material Design 3 interaction specs.
   action: {
-    hover: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-    selected: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-    disabledBackground: darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)',
-    disabled: darkMode ? '#475569' : grey[400],
+    hover: darkMode ? 'rgba(230, 237, 243, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+    selected: darkMode ? 'rgba(230, 237, 243, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+    focus: darkMode ? 'rgba(230, 237, 243, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+    disabledBackground: darkMode ? 'rgba(230, 237, 243, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+    disabled: darkMode ? '#484f58' : grey[400],
   },
   neutral: {
     main: grey[500],
